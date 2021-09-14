@@ -1,0 +1,18 @@
+[package]
+edition = "2018"
+name = "napi_rs_xz"
+version = "0.0.0"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+lzma-rs = "0.2"
+napi = "1"
+napi-derive = "1"
+
+[build-dependencies]
+napi-build = "1"
+
+[profile.release]
+lto = true

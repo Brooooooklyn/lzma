@@ -1,0 +1,16 @@
+{
+  "name": "@napi-rs/lzma-linux-arm-gnueabihf",
+  "version": "0.0.0",
+  "os": ["linux"],
+  "cpu": ["arm"],
+  "main": "lzma.linux-arm-gnueabihf.node",
+  "files": ["lzma.linux-arm-gnueabihf.node"],
+  "license": "MIT",
+  "engines": {
+    "node": ">= 10"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  }
+}
