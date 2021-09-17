@@ -1,20 +1,20 @@
 import test from 'ava'
 import type { Preset } from 'lzma-native'
 
-import { compress, decompress } from '../xz'
+import { compress, decompress } from '../lzma'
 
-let decompressNative: typeof import('lzma-native').decompress
-let compressNative: typeof import('lzma-native').compress
+let decompressNative: ReturnType<typeof import('lzma-native').LZMA>['decompress']
+let compressNative: ReturnType<typeof import('lzma-native').LZMA>['compress']
 
 try {
-  const { decompress, compress } = require('lzma-native')
-  decompressNative = decompress
-  compressNative = compress
+  const LZMA = require('lzma-native').LZMA()
+  decompressNative = LZMA.decompress
+  compressNative = LZMA.compress
 } catch {
-  decompressNative = (buf, _opt, cb) => {
+  decompressNative = (buf, cb) => {
     decompress(Buffer.from(buf)).then(cb)
   }
-  compressNative = (buf, _opt, cb) => {
+  compressNative = (buf, _mode, cb) => {
     compress(Buffer.from(buf)).then(cb)
   }
 }
@@ -24,7 +24,7 @@ const STRING_FIXTURE = 'Hello 🚀'
 test('should be able to compress string', async (t) => {
   const output = await compress(STRING_FIXTURE)
   return new Promise<void>((resolve) => {
-    decompressNative(output, 6, (o) => {
+    decompressNative(output, (o) => {
       t.is(o.toString('utf8'), STRING_FIXTURE)
       resolve()
     })
@@ -36,7 +36,6 @@ for (const mode of Array.from({ length: 10 }).map((_, i) => i)) {
     const compressed = await new Promise<Buffer>((resolve) => {
       compressNative(STRING_FIXTURE, mode as Preset, resolve)
     })
-
     t.is(await (await decompress(compressed)).toString('utf8'), STRING_FIXTURE)
   })
 }

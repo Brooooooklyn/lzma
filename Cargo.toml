@@ -7,7 +7,7 @@ version = "0.0.0"
 crate-type = ["cdylib"]
 
 [dependencies]
-lzma-rs = "0.2"
+lzma-rs = {version = "0.2", features = ["stream"]}
 napi = "1"
 napi-derive = "1"
 
