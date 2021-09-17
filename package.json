@@ -96,5 +96,19 @@
     "singleQuote": true,
     "arrowParens": "always",
     "parser": "typescript"
+  },
+  "exports": {
+    "./xz": {
+      "import": "./xz.js",
+      "require": "./xz.js"
+    },
+    "./lzma": {
+      "import": "./lzma.js",
+      "require": "./lzma.js"
+    },
+    "./lzma2": {
+      "import": "./lzma2.js",
+      "require": "./lzma2.js"
+    }
   }
 }

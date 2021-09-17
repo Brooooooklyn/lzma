@@ -30,3 +30,41 @@ yarn add @napi-rs/lzma
 | Linux arm64 musl      | ✓      | ✓      | ✓      |
 | Android arm64         | ✓      | ✓      | ✓      |
 | FreeBSD x64           | ✓      | ✓      | ✓      |
+
+## API
+
+### xz
+
+```js
+import { compress, decompress } from '@napi-rs/lzma/xz'
+
+const compressed = await compress('Hello napi-rs 🚀')
+
+const decompressed = await decompress(compressed)
+
+console.log(decompressed.toString('utf8')) // Hello napi-rs 🚀
+```
+
+### lzma
+
+```js
+import { compress, decompress } from '@napi-rs/lzma/lzma'
+
+const compressed = await compress('Hello napi-rs 🚀')
+
+const decompressed = await decompress(compressed)
+
+console.log(decompressed.toString('utf8')) // Hello napi-rs 🚀
+```
+
+### lzma2
+
+```js
+import { compress, decompress } from '@napi-rs/lzma/lzma2'
+
+const compressed = await compress('Hello napi-rs 🚀')
+
+const decompressed = await decompress(compressed)
+
+console.log(decompressed.toString('utf8')) // Hello napi-rs 🚀
+```
