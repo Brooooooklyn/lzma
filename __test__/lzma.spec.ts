@@ -1,3 +1,5 @@
+import { arch } from 'os'
+
 import test from 'ava'
 import type { Preset } from 'lzma-native'
 
@@ -31,7 +33,8 @@ test('should be able to compress string', async (t) => {
   })
 })
 
-for (const mode of Array.from({ length: 10 }).map((_, i) => i)) {
+// lzma-native cause `Cannot allocate memory` error when mode is 8/9 on Windows x32 platform
+for (const mode of Array.from({ length: arch() === 'ia32' ? 8 : 10 }).map((_, i) => i)) {
   test(`should be able to decompress string with mode ${mode}`, async (t) => {
     const compressed = await new Promise<Buffer>((resolve) => {
       compressNative(STRING_FIXTURE, mode as Preset, resolve)
