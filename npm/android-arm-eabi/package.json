@@ -1,15 +1,15 @@
 {
-  "name": "@napi-rs/lzma-darwin-x64",
+  "name": "@napi-rs/lzma-android-arm-eabi",
   "version": "1.0.0",
   "os": [
-    "darwin"
+    "android"
   ],
   "cpu": [
-    "x64"
+    "arm"
   ],
-  "main": "lzma.darwin-x64.node",
+  "main": "lzma.android-arm-eabi.node",
   "files": [
-    "lzma.darwin-x64.node"
+    "lzma.android-arm-eabi.node"
   ],
   "description": "https://docs.rs/lzma-rs binding to Node.js via https://napi.rs",
   "keywords": [

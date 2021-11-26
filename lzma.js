@@ -1,9 +1,5 @@
-const binding = require('./index')
+const { lzma } = require('./index')
 
-module.exports.compress = function compress(input) {
-  return binding.lzmaCompress(Buffer.from(input))
-}
+module.exports.compress = lzma.compress
 
-module.exports.decompress = function decompress(input) {
-  return binding.lzmaDecompress(Buffer.from(input))
-}
+module.exports.decompress = lzma.decompress
