@@ -8,7 +8,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 lzma-rs = {version = "0.2", features = ["stream"]}
-napi = "1"
+napi = "2"
 napi-derive = "1"
 
 [build-dependencies]
