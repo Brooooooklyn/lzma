@@ -1,3 +1,12 @@
+## [1.1.1](https://github.com/Brooooooklyn/lzma/compare/v1.1.0...v1.1.1) (2021-12-22)
+
+
+### Bug Fixes
+
+* missing esbuild dependency ([5cfb37b](https://github.com/Brooooooklyn/lzma/commit/5cfb37b41d65528a36f701ce4aa7ba8a089be52f))
+
+
+
 # [1.1.0](https://github.com/Brooooooklyn/lzma/compare/v1.0.0...v1.1.0) (2021-12-22)
 
 
