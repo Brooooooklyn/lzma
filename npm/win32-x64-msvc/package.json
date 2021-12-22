@@ -11,6 +11,16 @@
   "files": [
     "lzma.win32-x64-msvc.node"
   ],
+  "description": "https://docs.rs/lzma-rs binding to Node.js via https://napi.rs",
+  "keywords": [
+    "Node-API",
+    "napi",
+    "lzma",
+    "compress",
+    "decompress",
+    "xz",
+    "napi-rs"
+  ],
   "license": "MIT",
   "engines": {
     "node": ">= 10"

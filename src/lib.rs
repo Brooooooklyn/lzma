@@ -3,30 +3,53 @@
 #[macro_use]
 extern crate napi_derive;
 
-use napi::{JsObject, Result};
-
-#[module_exports]
-fn init(mut exports: JsObject) -> Result<()> {
-  exports.create_named_method("xzCompress", xz::compress)?;
-  exports.create_named_method("xzDecompress", xz::decompress)?;
-
-  exports.create_named_method("lzmaCompress", lzma::compress)?;
-  exports.create_named_method("lzmaDecompress", lzma::decompress)?;
-
-  exports.create_named_method("lzma2Compress", lzma2::compress)?;
-  exports.create_named_method("lzma2Decompress", lzma2::decompress)?;
-  Ok(())
-}
-
 macro_rules! define_functions {
-  ($compress_algorithm:ident, $decompress_algorithm:ident) => {
-    use napi::*;
-    #[repr(transparent)]
-    struct Compress(Ref<JsBufferValue>);
+  ($namespace:expr, $compress_algorithm:ident, $decompress_algorithm:ident) => {
+    use std::convert::TryFrom;
 
+    use napi::{bindgen_prelude::*, JsBuffer, JsBufferValue, Ref};
+
+    enum AsyncTaskData {
+      Buffer(Ref<JsBufferValue>),
+      String(String),
+    }
+
+    impl AsyncTaskData {
+      pub fn unref(&mut self, env: Env) -> Result<()> {
+        match self {
+          AsyncTaskData::Buffer(buffer) => buffer.unref(env).map(|_| ()),
+          AsyncTaskData::String(_) => Ok(()),
+        }
+      }
+    }
+
+    impl AsRef<[u8]> for AsyncTaskData {
+      fn as_ref(&self) -> &[u8] {
+        match &self {
+          AsyncTaskData::Buffer(buffer) => buffer.as_ref(),
+          AsyncTaskData::String(string) => string.as_bytes(),
+        }
+      }
+    }
+
+    impl TryFrom<Either<String, JsBuffer>> for AsyncTaskData {
+      type Error = Error;
+
+      fn try_from(value: Either<String, JsBuffer>) -> Result<Self> {
+        Ok(match value {
+          Either::A(string) => AsyncTaskData::String(string),
+          Either::B(buffer) => AsyncTaskData::Buffer(buffer.into_ref()?),
+        })
+      }
+    }
+
+    #[repr(transparent)]
+    pub struct Compress(AsyncTaskData);
+
+    #[napi(namespace = $namespace)]
     impl Task for Compress {
       type Output = Vec<u8>;
-      type JsValue = JsBuffer;
+      type JsValue = Buffer;
 
       fn compute(&mut self) -> Result<Self::Output> {
         let mut data_ref = self.0.as_ref();
@@ -35,29 +58,34 @@ macro_rules! define_functions {
         Ok(output)
       }
 
-      fn resolve(self, env: Env, output: Self::Output) -> Result<Self::JsValue> {
-        self.0.unref(env)?;
-        env.create_buffer_with_data(output).map(|b| b.into_raw())
+      fn resolve(&mut self, _env: Env, output: Self::Output) -> Result<Buffer> {
+        Ok(output.into())
       }
 
-      fn reject(self, env: Env, err: napi::Error) -> Result<Self::JsValue> {
+      fn finally(&mut self, env: Env) -> Result<()> {
         self.0.unref(env)?;
-        Err(err)
+        Ok(())
       }
     }
 
-    #[js_function(1)]
-    pub fn compress(ctx: CallContext) -> Result<JsObject> {
-      let input = ctx.get::<JsBuffer>(0)?.into_ref()?;
-      ctx.env.spawn(Compress(input)).map(|p| p.promise_object())
+    #[napi(namespace = $namespace)]
+    pub fn compress(
+      input: Either<String, JsBuffer>,
+      signal: Option<AbortSignal>,
+    ) -> Result<AsyncTask<Compress>> {
+      Ok(AsyncTask::with_optional_signal(
+        Compress(AsyncTaskData::try_from(input)?),
+        signal,
+      ))
     }
 
     #[repr(transparent)]
-    struct Decompress(Ref<JsBufferValue>);
+    pub struct Decompress(Ref<JsBufferValue>);
 
+    #[napi(namespace = $namespace)]
     impl Task for Decompress {
       type Output = Vec<u8>;
-      type JsValue = JsBuffer;
+      type JsValue = Buffer;
 
       fn compute(&mut self) -> Result<Self::Output> {
         let mut data_ref = self.0.as_ref();
@@ -67,33 +95,37 @@ macro_rules! define_functions {
         Ok(output)
       }
 
-      fn resolve(self, env: Env, output: Self::Output) -> Result<Self::JsValue> {
-        self.0.unref(env)?;
-        env.create_buffer_with_data(output).map(|b| b.into_raw())
+      fn resolve(&mut self, _env: Env, output: Self::Output) -> Result<Buffer> {
+        Ok(output.into())
       }
 
-      fn reject(self, env: Env, err: napi::Error) -> Result<Self::JsValue> {
+      fn finally(&mut self, env: Env) -> Result<()> {
         self.0.unref(env)?;
-        Err(err)
+        Ok(())
       }
     }
 
-    #[js_function(1)]
-    pub fn decompress(ctx: CallContext) -> Result<JsObject> {
-      let input = ctx.get::<JsBuffer>(0)?.into_ref()?;
-      ctx.env.spawn(Decompress(input)).map(|p| p.promise_object())
+    #[napi(namespace = $namespace)]
+    pub fn decompress(
+      input: JsBuffer,
+      signal: Option<AbortSignal>,
+    ) -> Result<AsyncTask<Decompress>> {
+      Ok(AsyncTask::with_optional_signal(
+        Decompress(input.into_ref()?),
+        signal,
+      ))
     }
   };
 }
 
-mod lzma {
-  define_functions!(lzma_compress, lzma_decompress);
+pub mod lzma {
+  define_functions!("lzma", lzma_compress, lzma_decompress);
 }
 
-mod lzma2 {
-  define_functions!(lzma2_compress, lzma2_decompress);
+pub mod lzma2 {
+  define_functions!("lzma2", lzma2_compress, lzma2_decompress);
 }
 
-mod xz {
-  define_functions!(xz_compress, xz_decompress);
+pub mod xz {
+  define_functions!("xz", xz_compress, xz_decompress);
 }

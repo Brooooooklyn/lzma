@@ -1,2 +1,4 @@
-export function compress(input: string | Buffer): Promise<Buffer>
-export function decompress(input: Buffer): Promise<Buffer>
+import { lzma } from './index'
+
+export const compress: typeof lzma.compress
+export const decompress: typeof lzma.decompress
