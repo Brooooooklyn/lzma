@@ -35,6 +35,7 @@
   "license": "MIT",
   "files": [
     "index.js",
+    "index.d.ts",
     "xz.js",
     "xz.d.ts",
     "lzma.js",
