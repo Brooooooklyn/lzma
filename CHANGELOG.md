@@ -1,3 +1,12 @@
+## [1.1.2](https://github.com/Brooooooklyn/lzma/compare/v1.1.1...v1.1.2) (2021-12-23)
+
+
+### Bug Fixes
+
+* publish missing .d.ts file ([a393809](https://github.com/Brooooooklyn/lzma/commit/a393809d38dd4f4d721811109ca48fea9f58ab18))
+
+
+
 ## [1.1.1](https://github.com/Brooooooklyn/lzma/compare/v1.1.0...v1.1.1) (2021-12-22)
 
 
