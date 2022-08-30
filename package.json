@@ -80,7 +80,7 @@
     "extensions": [
       "ts"
     ],
-    "timeout": "30s",
+    "timeout": "2m",
     "environmentVariables": {
       "SWC_NODE_PROJECT": "./tsconfig.json",
       "NODE_ENV": "ava"
