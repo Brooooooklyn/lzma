@@ -201,11 +201,11 @@ __metadata:
   linkType: hard
 
 "@napi-rs/cli@npm:^2.14.0":
-  version: 2.14.1
-  resolution: "@napi-rs/cli@npm:2.14.1"
+  version: 2.14.3
+  resolution: "@napi-rs/cli@npm:2.14.3"
   bin:
     napi: scripts/index.js
-  checksum: ac93f7ce67b9b5ab839fadc7afbaa0a33126325807578133df016ed9d88455f403e7ceb9f225d2996d65e4a9d67960516533bab155a47998192f42febe35de24
+  checksum: b34344f8cc0d6c89a6808966d6e4bb36ba03bc21630b4fa4efd14ef6070da3432c450f6f5d6641cb77ef237af165d356ced05f4bd496ed292d6e26675b362eff
   languageName: node
   linkType: hard
 
@@ -230,116 +230,116 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@node-rs/deno-lint-android-arm-eabi@npm:1.14.0":
-  version: 1.14.0
-  resolution: "@node-rs/deno-lint-android-arm-eabi@npm:1.14.0"
+"@node-rs/deno-lint-android-arm-eabi@npm:1.15.0":
+  version: 1.15.0
+  resolution: "@node-rs/deno-lint-android-arm-eabi@npm:1.15.0"
   conditions: os=android & cpu=arm
   languageName: node
   linkType: hard
 
-"@node-rs/deno-lint-android-arm64@npm:1.14.0":
-  version: 1.14.0
-  resolution: "@node-rs/deno-lint-android-arm64@npm:1.14.0"
+"@node-rs/deno-lint-android-arm64@npm:1.15.0":
+  version: 1.15.0
+  resolution: "@node-rs/deno-lint-android-arm64@npm:1.15.0"
   conditions: os=android & cpu=arm64
   languageName: node
   linkType: hard
 
-"@node-rs/deno-lint-darwin-arm64@npm:1.14.0":
-  version: 1.14.0
-  resolution: "@node-rs/deno-lint-darwin-arm64@npm:1.14.0"
+"@node-rs/deno-lint-darwin-arm64@npm:1.15.0":
+  version: 1.15.0
+  resolution: "@node-rs/deno-lint-darwin-arm64@npm:1.15.0"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"@node-rs/deno-lint-darwin-x64@npm:1.14.0":
-  version: 1.14.0
-  resolution: "@node-rs/deno-lint-darwin-x64@npm:1.14.0"
+"@node-rs/deno-lint-darwin-x64@npm:1.15.0":
+  version: 1.15.0
+  resolution: "@node-rs/deno-lint-darwin-x64@npm:1.15.0"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"@node-rs/deno-lint-freebsd-x64@npm:1.14.0":
-  version: 1.14.0
-  resolution: "@node-rs/deno-lint-freebsd-x64@npm:1.14.0"
+"@node-rs/deno-lint-freebsd-x64@npm:1.15.0":
+  version: 1.15.0
+  resolution: "@node-rs/deno-lint-freebsd-x64@npm:1.15.0"
   conditions: os=freebsd & cpu=x64
   languageName: node
   linkType: hard
 
-"@node-rs/deno-lint-linux-arm-gnueabihf@npm:1.14.0":
-  version: 1.14.0
-  resolution: "@node-rs/deno-lint-linux-arm-gnueabihf@npm:1.14.0"
+"@node-rs/deno-lint-linux-arm-gnueabihf@npm:1.15.0":
+  version: 1.15.0
+  resolution: "@node-rs/deno-lint-linux-arm-gnueabihf@npm:1.15.0"
   conditions: os=linux & cpu=arm
   languageName: node
   linkType: hard
 
-"@node-rs/deno-lint-linux-arm64-gnu@npm:1.14.0":
-  version: 1.14.0
-  resolution: "@node-rs/deno-lint-linux-arm64-gnu@npm:1.14.0"
+"@node-rs/deno-lint-linux-arm64-gnu@npm:1.15.0":
+  version: 1.15.0
+  resolution: "@node-rs/deno-lint-linux-arm64-gnu@npm:1.15.0"
   conditions: os=linux & cpu=arm64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@node-rs/deno-lint-linux-arm64-musl@npm:1.14.0":
-  version: 1.14.0
-  resolution: "@node-rs/deno-lint-linux-arm64-musl@npm:1.14.0"
+"@node-rs/deno-lint-linux-arm64-musl@npm:1.15.0":
+  version: 1.15.0
+  resolution: "@node-rs/deno-lint-linux-arm64-musl@npm:1.15.0"
   conditions: os=linux & cpu=arm64 & libc=musl
   languageName: node
   linkType: hard
 
-"@node-rs/deno-lint-linux-x64-gnu@npm:1.14.0":
-  version: 1.14.0
-  resolution: "@node-rs/deno-lint-linux-x64-gnu@npm:1.14.0"
+"@node-rs/deno-lint-linux-x64-gnu@npm:1.15.0":
+  version: 1.15.0
+  resolution: "@node-rs/deno-lint-linux-x64-gnu@npm:1.15.0"
   conditions: os=linux & cpu=x64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@node-rs/deno-lint-linux-x64-musl@npm:1.14.0":
-  version: 1.14.0
-  resolution: "@node-rs/deno-lint-linux-x64-musl@npm:1.14.0"
+"@node-rs/deno-lint-linux-x64-musl@npm:1.15.0":
+  version: 1.15.0
+  resolution: "@node-rs/deno-lint-linux-x64-musl@npm:1.15.0"
   conditions: os=linux & cpu=x64 & libc=musl
   languageName: node
   linkType: hard
 
-"@node-rs/deno-lint-win32-arm64-msvc@npm:1.14.0":
-  version: 1.14.0
-  resolution: "@node-rs/deno-lint-win32-arm64-msvc@npm:1.14.0"
+"@node-rs/deno-lint-win32-arm64-msvc@npm:1.15.0":
+  version: 1.15.0
+  resolution: "@node-rs/deno-lint-win32-arm64-msvc@npm:1.15.0"
   conditions: os=win32 & cpu=arm64
   languageName: node
   linkType: hard
 
-"@node-rs/deno-lint-win32-ia32-msvc@npm:1.14.0":
-  version: 1.14.0
-  resolution: "@node-rs/deno-lint-win32-ia32-msvc@npm:1.14.0"
+"@node-rs/deno-lint-win32-ia32-msvc@npm:1.15.0":
+  version: 1.15.0
+  resolution: "@node-rs/deno-lint-win32-ia32-msvc@npm:1.15.0"
   conditions: os=win32 & cpu=ia32
   languageName: node
   linkType: hard
 
-"@node-rs/deno-lint-win32-x64-msvc@npm:1.14.0":
-  version: 1.14.0
-  resolution: "@node-rs/deno-lint-win32-x64-msvc@npm:1.14.0"
+"@node-rs/deno-lint-win32-x64-msvc@npm:1.15.0":
+  version: 1.15.0
+  resolution: "@node-rs/deno-lint-win32-x64-msvc@npm:1.15.0"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
 
 "@node-rs/deno-lint@npm:^1.14.0":
-  version: 1.14.0
-  resolution: "@node-rs/deno-lint@npm:1.14.0"
+  version: 1.15.0
+  resolution: "@node-rs/deno-lint@npm:1.15.0"
   dependencies:
-    "@node-rs/deno-lint-android-arm-eabi": 1.14.0
-    "@node-rs/deno-lint-android-arm64": 1.14.0
-    "@node-rs/deno-lint-darwin-arm64": 1.14.0
-    "@node-rs/deno-lint-darwin-x64": 1.14.0
-    "@node-rs/deno-lint-freebsd-x64": 1.14.0
-    "@node-rs/deno-lint-linux-arm-gnueabihf": 1.14.0
-    "@node-rs/deno-lint-linux-arm64-gnu": 1.14.0
-    "@node-rs/deno-lint-linux-arm64-musl": 1.14.0
-    "@node-rs/deno-lint-linux-x64-gnu": 1.14.0
-    "@node-rs/deno-lint-linux-x64-musl": 1.14.0
-    "@node-rs/deno-lint-win32-arm64-msvc": 1.14.0
-    "@node-rs/deno-lint-win32-ia32-msvc": 1.14.0
-    "@node-rs/deno-lint-win32-x64-msvc": 1.14.0
+    "@node-rs/deno-lint-android-arm-eabi": 1.15.0
+    "@node-rs/deno-lint-android-arm64": 1.15.0
+    "@node-rs/deno-lint-darwin-arm64": 1.15.0
+    "@node-rs/deno-lint-darwin-x64": 1.15.0
+    "@node-rs/deno-lint-freebsd-x64": 1.15.0
+    "@node-rs/deno-lint-linux-arm-gnueabihf": 1.15.0
+    "@node-rs/deno-lint-linux-arm64-gnu": 1.15.0
+    "@node-rs/deno-lint-linux-arm64-musl": 1.15.0
+    "@node-rs/deno-lint-linux-x64-gnu": 1.15.0
+    "@node-rs/deno-lint-linux-x64-musl": 1.15.0
+    "@node-rs/deno-lint-win32-arm64-msvc": 1.15.0
+    "@node-rs/deno-lint-win32-ia32-msvc": 1.15.0
+    "@node-rs/deno-lint-win32-x64-msvc": 1.15.0
     clipanion: ^3.1.0
-    typanion: ^3.9.0
+    typanion: ^3.12.1
   dependenciesMeta:
     "@node-rs/deno-lint-android-arm-eabi":
       optional: true
@@ -369,7 +369,7 @@ __metadata:
       optional: true
   bin:
     denolint: bin.js
-  checksum: b7835e1b49c0a7ca9af81ce45dde94f2cddbe36b0f191d9a6ed0bfc6d5be8d1da63a2598c77cbf63f1bd6a78861f45e3161683a1a2cd5e5a8d7b1338f2509903
+  checksum: 42c1b989cd77037f7578d47b04f5427a1deb582c7055478f86695b41a4e8f7b99eec7ae8e17b3335376c37b00a316ca5269ac520ea959b7bf624d9d3639fc0fb
   languageName: node
   linkType: hard
 
@@ -456,90 +456,90 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@swc/core-darwin-arm64@npm:1.3.25":
-  version: 1.3.25
-  resolution: "@swc/core-darwin-arm64@npm:1.3.25"
+"@swc/core-darwin-arm64@npm:1.3.26":
+  version: 1.3.26
+  resolution: "@swc/core-darwin-arm64@npm:1.3.26"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"@swc/core-darwin-x64@npm:1.3.25":
-  version: 1.3.25
-  resolution: "@swc/core-darwin-x64@npm:1.3.25"
+"@swc/core-darwin-x64@npm:1.3.26":
+  version: 1.3.26
+  resolution: "@swc/core-darwin-x64@npm:1.3.26"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"@swc/core-linux-arm-gnueabihf@npm:1.3.25":
-  version: 1.3.25
-  resolution: "@swc/core-linux-arm-gnueabihf@npm:1.3.25"
+"@swc/core-linux-arm-gnueabihf@npm:1.3.26":
+  version: 1.3.26
+  resolution: "@swc/core-linux-arm-gnueabihf@npm:1.3.26"
   conditions: os=linux & cpu=arm
   languageName: node
   linkType: hard
 
-"@swc/core-linux-arm64-gnu@npm:1.3.25":
-  version: 1.3.25
-  resolution: "@swc/core-linux-arm64-gnu@npm:1.3.25"
+"@swc/core-linux-arm64-gnu@npm:1.3.26":
+  version: 1.3.26
+  resolution: "@swc/core-linux-arm64-gnu@npm:1.3.26"
   conditions: os=linux & cpu=arm64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@swc/core-linux-arm64-musl@npm:1.3.25":
-  version: 1.3.25
-  resolution: "@swc/core-linux-arm64-musl@npm:1.3.25"
+"@swc/core-linux-arm64-musl@npm:1.3.26":
+  version: 1.3.26
+  resolution: "@swc/core-linux-arm64-musl@npm:1.3.26"
   conditions: os=linux & cpu=arm64 & libc=musl
   languageName: node
   linkType: hard
 
-"@swc/core-linux-x64-gnu@npm:1.3.25":
-  version: 1.3.25
-  resolution: "@swc/core-linux-x64-gnu@npm:1.3.25"
+"@swc/core-linux-x64-gnu@npm:1.3.26":
+  version: 1.3.26
+  resolution: "@swc/core-linux-x64-gnu@npm:1.3.26"
   conditions: os=linux & cpu=x64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@swc/core-linux-x64-musl@npm:1.3.25":
-  version: 1.3.25
-  resolution: "@swc/core-linux-x64-musl@npm:1.3.25"
+"@swc/core-linux-x64-musl@npm:1.3.26":
+  version: 1.3.26
+  resolution: "@swc/core-linux-x64-musl@npm:1.3.26"
   conditions: os=linux & cpu=x64 & libc=musl
   languageName: node
   linkType: hard
 
-"@swc/core-win32-arm64-msvc@npm:1.3.25":
-  version: 1.3.25
-  resolution: "@swc/core-win32-arm64-msvc@npm:1.3.25"
+"@swc/core-win32-arm64-msvc@npm:1.3.26":
+  version: 1.3.26
+  resolution: "@swc/core-win32-arm64-msvc@npm:1.3.26"
   conditions: os=win32 & cpu=arm64
   languageName: node
   linkType: hard
 
-"@swc/core-win32-ia32-msvc@npm:1.3.25":
-  version: 1.3.25
-  resolution: "@swc/core-win32-ia32-msvc@npm:1.3.25"
+"@swc/core-win32-ia32-msvc@npm:1.3.26":
+  version: 1.3.26
+  resolution: "@swc/core-win32-ia32-msvc@npm:1.3.26"
   conditions: os=win32 & cpu=ia32
   languageName: node
   linkType: hard
 
-"@swc/core-win32-x64-msvc@npm:1.3.25":
-  version: 1.3.25
-  resolution: "@swc/core-win32-x64-msvc@npm:1.3.25"
+"@swc/core-win32-x64-msvc@npm:1.3.26":
+  version: 1.3.26
+  resolution: "@swc/core-win32-x64-msvc@npm:1.3.26"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
 
 "@swc/core@npm:^1.3.24":
-  version: 1.3.25
-  resolution: "@swc/core@npm:1.3.25"
+  version: 1.3.26
+  resolution: "@swc/core@npm:1.3.26"
   dependencies:
-    "@swc/core-darwin-arm64": 1.3.25
-    "@swc/core-darwin-x64": 1.3.25
-    "@swc/core-linux-arm-gnueabihf": 1.3.25
-    "@swc/core-linux-arm64-gnu": 1.3.25
-    "@swc/core-linux-arm64-musl": 1.3.25
-    "@swc/core-linux-x64-gnu": 1.3.25
-    "@swc/core-linux-x64-musl": 1.3.25
-    "@swc/core-win32-arm64-msvc": 1.3.25
-    "@swc/core-win32-ia32-msvc": 1.3.25
-    "@swc/core-win32-x64-msvc": 1.3.25
+    "@swc/core-darwin-arm64": 1.3.26
+    "@swc/core-darwin-x64": 1.3.26
+    "@swc/core-linux-arm-gnueabihf": 1.3.26
+    "@swc/core-linux-arm64-gnu": 1.3.26
+    "@swc/core-linux-arm64-musl": 1.3.26
+    "@swc/core-linux-x64-gnu": 1.3.26
+    "@swc/core-linux-x64-musl": 1.3.26
+    "@swc/core-win32-arm64-msvc": 1.3.26
+    "@swc/core-win32-ia32-msvc": 1.3.26
+    "@swc/core-win32-x64-msvc": 1.3.26
   dependenciesMeta:
     "@swc/core-darwin-arm64":
       optional: true
@@ -561,7 +561,7 @@ __metadata:
       optional: true
     "@swc/core-win32-x64-msvc":
       optional: true
-  checksum: de45a7dd871cc9497ad998d6a320d3c95cb9c74fdcb70590ff1f631e75001820d021bbfd5c463e9172afcb5ee47bffaa8fb893230e1329538c9f7afbd5ed45cf
+  checksum: 656a2197bd8bd50b112077e8c7f9156527ec66cb06fed2cefb9e2610e3cde13e8416783f84edda67b9af4e27d6b169bc1a447d7c6c73cf64a1b3ec428b0737ab
   languageName: node
   linkType: hard
 
@@ -795,8 +795,8 @@ __metadata:
   linkType: hard
 
 "ava@npm:^5.1.0":
-  version: 5.1.0
-  resolution: "ava@npm:5.1.0"
+  version: 5.1.1
+  resolution: "ava@npm:5.1.1"
   dependencies:
     acorn: ^8.8.1
     acorn-walk: ^8.2.0
@@ -805,10 +805,10 @@ __metadata:
     arrify: ^3.0.0
     callsites: ^4.0.0
     cbor: ^8.1.0
-    chalk: ^5.1.2
+    chalk: ^5.2.0
     chokidar: ^3.5.3
     chunkd: ^2.0.1
-    ci-info: ^3.6.1
+    ci-info: ^3.7.1
     ci-parallel-vars: ^1.0.1
     clean-yaml-object: ^0.1.0
     cli-truncate: ^3.1.0
@@ -820,7 +820,7 @@ __metadata:
     del: ^7.0.0
     emittery: ^1.0.1
     figures: ^5.0.0
-    globby: ^13.1.2
+    globby: ^13.1.3
     ignore-by-default: ^2.1.0
     indent-string: ^5.0.0
     is-error: ^2.2.2
@@ -850,7 +850,7 @@ __metadata:
       optional: true
   bin:
     ava: entrypoints/cli.mjs
-  checksum: 5f0b7ebd2ee236fe7698bf85ce6c67f8e4aed841a23f0bcf5e13ed6614f8e94be4937330ac721060f333b18f6d370e5c644649a1a979b2962d039d904f43b364
+  checksum: cae5771ea651418c966dc7779128121f933aba7a39d86d8663c2097435bfc7264b0893b966d9ade3325a1051854d82b220e2db779482414a6283cb388ba00fb3
   languageName: node
   linkType: hard
 
@@ -998,7 +998,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"chalk@npm:^5.1.2":
+"chalk@npm:^5.2.0":
   version: 5.2.0
   resolution: "chalk@npm:5.2.0"
   checksum: 03d8060277de6cf2fd567dc25fcf770593eb5bb85f460ce443e49255a30ff1242edd0c90a06a03803b0466ff0687a939b41db1757bec987113e83de89a003caa
@@ -1038,7 +1038,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ci-info@npm:^3.6.1":
+"ci-info@npm:^3.7.1":
   version: 3.7.1
   resolution: "ci-info@npm:3.7.1"
   checksum: 72d93d5101ea1c186511277fbd8d06ae8a6e028cc2fb94361e92bf735b39c5ebd192e8d15a66ff8c4e3ed569f87c2f844e96f90e141b2de5c649f77ec34ff601
@@ -1622,11 +1622,12 @@ __metadata:
   linkType: hard
 
 "es-abstract@npm:^1.19.0, es-abstract@npm:^1.20.4":
-  version: 1.21.0
-  resolution: "es-abstract@npm:1.21.0"
+  version: 1.21.1
+  resolution: "es-abstract@npm:1.21.1"
   dependencies:
+    available-typed-arrays: ^1.0.5
     call-bind: ^1.0.2
-    es-set-tostringtag: ^2.0.0
+    es-set-tostringtag: ^2.0.1
     es-to-primitive: ^1.2.1
     function-bind: ^1.1.1
     function.prototype.name: ^1.1.5
@@ -1639,7 +1640,7 @@ __metadata:
     has-proto: ^1.0.1
     has-symbols: ^1.0.3
     internal-slot: ^1.0.4
-    is-array-buffer: ^3.0.0
+    is-array-buffer: ^3.0.1
     is-callable: ^1.2.7
     is-negative-zero: ^2.0.2
     is-regex: ^1.1.4
@@ -1657,11 +1658,11 @@ __metadata:
     typed-array-length: ^1.0.4
     unbox-primitive: ^1.0.2
     which-typed-array: ^1.1.9
-  checksum: 52305b52aff6505c9d8cebfa727835dd8871af76de151868d1db7baf6d21f13a81586316ac513601eec9b46e2947cab044fc2a131db68bfa05daf37aa153dbd9
+  checksum: 23ff60d42d17a55d150e7bcedbdb065d4077a8b98c436e0e2e1ef4dd532a6d78a56028673de0bd8ed464a43c46ba781c50d9af429b6a17e44dbd14c7d7fb7926
   languageName: node
   linkType: hard
 
-"es-set-tostringtag@npm:^2.0.0":
+"es-set-tostringtag@npm:^2.0.1":
   version: 2.0.1
   resolution: "es-set-tostringtag@npm:2.0.1"
   dependencies:
@@ -2080,15 +2081,15 @@ __metadata:
   linkType: hard
 
 "glob@npm:^8.0.1":
-  version: 8.0.3
-  resolution: "glob@npm:8.0.3"
+  version: 8.1.0
+  resolution: "glob@npm:8.1.0"
   dependencies:
     fs.realpath: ^1.0.0
     inflight: ^1.0.4
     inherits: 2
     minimatch: ^5.0.1
     once: ^1.3.0
-  checksum: 50bcdea19d8e79d8de5f460b1939ffc2b3299eac28deb502093fdca22a78efebc03e66bf54f0abc3d3d07d8134d19a32850288b7440d77e072aa55f9d33b18c5
+  checksum: 92fbea3221a7d12075f26f0227abac435de868dd0736a17170663783296d0dd8d3d532a5672b4488a439bf5d7fb85cdd07c11185d6cd39184f0385cbdfb86a47
   languageName: node
   linkType: hard
 
@@ -2101,7 +2102,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"globby@npm:^13.1.2":
+"globby@npm:^13.1.2, globby@npm:^13.1.3":
   version: 13.1.3
   resolution: "globby@npm:13.1.3"
   dependencies:
@@ -2370,7 +2371,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"is-array-buffer@npm:^3.0.0":
+"is-array-buffer@npm:^3.0.1":
   version: 3.0.1
   resolution: "is-array-buffer@npm:3.0.1"
   dependencies:
@@ -2949,11 +2950,11 @@ __metadata:
   linkType: hard
 
 "minimatch@npm:^5.0.1":
-  version: 5.1.2
-  resolution: "minimatch@npm:5.1.2"
+  version: 5.1.4
+  resolution: "minimatch@npm:5.1.4"
   dependencies:
     brace-expansion: ^2.0.1
-  checksum: 32ffda25b9fb8270a1c1beafdb7489dc0e411af553495136509a945691f63c9b6b000eeeaaf8bffe3efa609c1d6d3bc0f5a106f6c3443b5c05da649100ded964
+  checksum: 0de6d7d154e70d12487b30a7bfcb74bd15fd1f1ec007a2516699ba76e63f78ca2e5016c200b242ed75123aff8dcccf49947f71b629fb1b1f221c8e76a13ed8de
   languageName: node
   linkType: hard
 
@@ -3228,9 +3229,9 @@ __metadata:
   linkType: hard
 
 "object-inspect@npm:^1.12.2, object-inspect@npm:^1.9.0":
-  version: 1.12.2
-  resolution: "object-inspect@npm:1.12.2"
-  checksum: a534fc1b8534284ed71f25ce3a496013b7ea030f3d1b77118f6b7b1713829262be9e6243acbcb3ef8c626e2b64186112cb7f6db74e37b2789b9c789ca23048b2
+  version: 1.12.3
+  resolution: "object-inspect@npm:1.12.3"
+  checksum: dabfd824d97a5f407e6d5d24810d888859f6be394d8b733a77442b277e0808860555176719c5905e765e3743a7cada6b8b0a3b85e5331c530fd418cc8ae991db
   languageName: node
   linkType: hard
 
@@ -3515,11 +3516,11 @@ __metadata:
   linkType: hard
 
 "prettier@npm:^2.8.1":
-  version: 2.8.2
-  resolution: "prettier@npm:2.8.2"
+  version: 2.8.3
+  resolution: "prettier@npm:2.8.3"
   bin:
     prettier: bin-prettier.js
-  checksum: 740c56c2128d587d656ea1dde9bc9c3503dfc94db4f3ac387259215eeb2e216680bdad9d18a0c9feecc6b42cfa188d6fa777df4c36c1d00cedd4199074fbfbd2
+  checksum: 92f2ceb522d454370e02082aa74ad27388672f7cee8975028b59517c069fe643bdc73e322675c8faf2ff173d7a626d1a6389f26b474000308e793aa25fff46e5
   languageName: node
   linkType: hard
 
@@ -4260,7 +4261,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typanion@npm:^3.3.1, typanion@npm:^3.9.0":
+"typanion@npm:^3.12.1, typanion@npm:^3.3.1":
   version: 3.12.1
   resolution: "typanion@npm:3.12.1"
   checksum: a2e26fa216f8a1dbd2ffbaacb75b1e2dc042a0356e9702fba05a968cad95d9f661b24e37f6c6d8c3adad2c8582c99fca4826ff26a2d07cd2ae617ea87e6187eb
