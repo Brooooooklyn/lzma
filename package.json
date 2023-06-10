@@ -51,7 +51,7 @@
     "@types/lzma-native": "^4.0.1",
     "@types/node": "^18.11.18",
     "ava": "^5.1.0",
-    "conventional-changelog-cli": "^2.2.2",
+    "conventional-changelog-cli": "^3.0.0",
     "esbuild": "^0.18.0",
     "lzma": "^2.3.2",
     "lzma-native": "^8.0.6",
