@@ -1,14 +1,14 @@
 [package]
 edition = "2018"
-name = "napi_rs_xz"
+name    = "napi_rs_xz"
 version = "0.0.0"
 
 [lib]
 crate-type = ["cdylib"]
 
 [dependencies]
-lzma-rs = {version = "0.3", features = ["stream"]}
-napi = "2"
+lzma-rs     = { version = "0.3", features = ["stream"] }
+napi        = "2"
 napi-derive = "2"
 
 [build-dependencies]
