@@ -1,3 +1,17 @@
+# [1.2.0](https://github.com/Brooooooklyn/lzma/compare/v1.1.2...v1.2.0) (2023-12-05)
+
+
+### Bug Fixes
+
+* **deps:** update rust crate lzma-rs to 0.3 ([#71](https://github.com/Brooooooklyn/lzma/issues/71)) ([04345d0](https://github.com/Brooooooklyn/lzma/commit/04345d08f215a41784cd13008f910e4219e53a8f))
+
+
+### Features
+
+* provide sync api ([#128](https://github.com/Brooooooklyn/lzma/issues/128)) ([bdf5fff](https://github.com/Brooooooklyn/lzma/commit/bdf5fffb1a80fcd0a225279b7f7f16227d549528))
+
+
+
 ## [1.1.2](https://github.com/Brooooooklyn/lzma/compare/v1.1.1...v1.1.2) (2021-12-23)
 
 ### Bug Fixes
