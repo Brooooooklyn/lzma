@@ -1,3 +1,12 @@
+## [1.2.1](https://github.com/Brooooooklyn/lzma/compare/v1.2.0...v1.2.1) (2023-12-05)
+
+
+### Bug Fixes
+
+* missing exports ([73b101b](https://github.com/Brooooooklyn/lzma/commit/73b101b2c49d45a4dd0c255c33287f2b952d13db))
+
+
+
 # [1.2.0](https://github.com/Brooooooklyn/lzma/compare/v1.1.2...v1.2.0) (2023-12-05)
 
 
