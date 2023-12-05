@@ -79,6 +79,12 @@ macro_rules! define_functions {
       ))
     }
 
+    #[napi(namespace = $namespace)]
+    pub fn compress_sync(input: Either<String, JsBuffer>) -> Result<Buffer> {
+      let mut task = Compress(AsyncTaskData::try_from(input)?);
+      task.compute().map(|o| o.into())
+    }
+
     #[repr(transparent)]
     pub struct Decompress(Ref<JsBufferValue>);
 
@@ -114,6 +120,12 @@ macro_rules! define_functions {
         Decompress(input.into_ref()?),
         signal,
       ))
+    }
+
+    #[napi(namespace = $namespace)]
+    pub fn decompress_sync(input: JsBuffer) -> Result<Buffer> {
+      let mut task = Decompress(input.into_ref()?);
+      task.compute().map(|o| o.into())
     }
   };
 }
