@@ -28,5 +28,12 @@
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",
     "access": "public"
-  }
+  },
+  "repository": {
+    "url": "https://github.com/Brooooooklyn/lzma.git",
+    "type": "git"
+  },
+  "libc": [
+    "musl"
+  ]
 }
