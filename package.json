@@ -58,7 +58,7 @@
     "esbuild": "^0.20.0",
     "lzma": "^2.3.2",
     "lzma-native": "^8.0.6",
-    "npm-run-all2": "^5.0.0",
+    "npm-run-all2": "^6.0.0",
     "prettier": "^3.1.0",
     "ts-node": "^10.9.1",
     "typescript": "^5.3.2"
