@@ -50,7 +50,7 @@
   "devDependencies": {
     "@napi-rs/cli": "^2.16.5",
     "@node-rs/deno-lint": "^1.17.3",
-    "@taplo/cli": "^0.5.2",
+    "@taplo/cli": "^0.7.0",
     "@types/lzma-native": "^4.0.4",
     "@types/node": "^20.10.3",
     "ava": "^6.0.0",
