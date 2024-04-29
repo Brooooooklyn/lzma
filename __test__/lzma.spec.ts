@@ -8,14 +8,16 @@ import { compress, decompress } from '../lzma'
 let decompressNative: ReturnType<typeof import('lzma-native').LZMA>['decompress']
 let compressNative: ReturnType<typeof import('lzma-native').LZMA>['compress']
 
+const decompressPolyfill = (buf: string | Buffer, cb?: (output: Buffer) => void) => {
+  decompress(Buffer.from(buf)).then(cb)
+}
+
 try {
   const LZMA = require('lzma-native').LZMA()
   decompressNative = LZMA.decompress
   compressNative = LZMA.compress
 } catch {
-  decompressNative = (buf, cb) => {
-    decompress(Buffer.from(buf)).then(cb)
-  }
+  decompressNative = decompressPolyfill
   compressNative = (buf, _mode, cb) => {
     compress(Buffer.from(buf)).then(cb)
   }
@@ -26,7 +28,7 @@ const STRING_FIXTURE = 'Hello 🚀'
 test('should be able to compress string', async (t) => {
   const output = await compress(STRING_FIXTURE)
   return new Promise<void>((resolve) => {
-    decompressNative(output, (o) => {
+    ;(process.env.NAPI_RS_FORCE_WASI ? decompressPolyfill : decompressNative)(output, (o) => {
       t.is(o.toString('utf8'), STRING_FIXTURE)
       resolve()
     })

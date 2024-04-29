@@ -3,21 +3,23 @@
   "version": "1.2.1",
   "description": "https://docs.rs/lzma-rs binding to Node.js via https://napi.rs",
   "napi": {
-    "name": "lzma",
-    "triples": {
-      "additional": [
-        "aarch64-apple-darwin",
-        "aarch64-linux-android",
-        "aarch64-unknown-linux-gnu",
-        "aarch64-unknown-linux-musl",
-        "aarch64-pc-windows-msvc",
-        "armv7-unknown-linux-gnueabihf",
-        "arm-linux-androideabi",
-        "x86_64-unknown-linux-musl",
-        "x86_64-unknown-freebsd",
-        "i686-pc-windows-msvc"
-      ]
-    }
+    "binaryName": "lzma",
+    "targets": [
+      "x86_64-pc-windows-msvc",
+      "x86_64-unknown-linux-gnu",
+      "x86_64-apple-darwin",
+      "aarch64-apple-darwin",
+      "aarch64-linux-android",
+      "aarch64-unknown-linux-gnu",
+      "aarch64-unknown-linux-musl",
+      "aarch64-pc-windows-msvc",
+      "armv7-unknown-linux-gnueabihf",
+      "arm-linux-androideabi",
+      "x86_64-unknown-linux-musl",
+      "x86_64-unknown-freebsd",
+      "i686-pc-windows-msvc",
+      "wasm32-wasi-preview1-threads"
+    ]
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",
@@ -48,20 +50,21 @@
     "lzma2.d.ts"
   ],
   "devDependencies": {
-    "@napi-rs/cli": "^2.16.5",
-    "@node-rs/deno-lint": "^1.17.3",
+    "@napi-rs/cli": "^3.0.0-alpha.54",
+    "@napi-rs/wasm-runtime": "^0.2.3",
     "@taplo/cli": "^0.7.0",
     "@types/lzma-native": "^4.0.4",
-    "@types/node": "^20.10.3",
-    "ava": "^6.0.0",
+    "@types/node": "^20.12.7",
+    "ava": "^6.1.2",
     "conventional-changelog-cli": "^4.1.0",
-    "esbuild": "^0.20.0",
+    "esbuild": "^0.20.2",
     "lzma": "^2.3.2",
     "lzma-native": "^8.0.6",
-    "npm-run-all2": "^6.0.0",
-    "prettier": "^3.1.0",
-    "ts-node": "^10.9.1",
-    "typescript": "^5.3.2"
+    "npm-run-all2": "^6.1.2",
+    "oxlint": "^0.3.1",
+    "prettier": "^3.2.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
   },
   "engines": {
     "node": ">= 10"
@@ -70,7 +73,7 @@
     "artifacts": "napi artifacts",
     "build": "napi build --platform --release",
     "build:debug": "napi build --platform",
-    "lint": "denolint .",
+    "lint": "oxlint .",
     "format": "run-p format:source format:rs format:toml",
     "format:rs": "cargo fmt",
     "format:source": "prettier --config ./package.json --write .",
