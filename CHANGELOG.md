@@ -1,3 +1,12 @@
+# [1.3.0](https://github.com/Brooooooklyn/lzma/compare/v1.2.1...v1.3.0) (2024-04-29)
+
+
+### Features
+
+* support wasi target ([#152](https://github.com/Brooooooklyn/lzma/issues/152)) ([f64bf9b](https://github.com/Brooooooklyn/lzma/commit/f64bf9bf46c0ea8079e8cd6818cf11082d01bdf4))
+
+
+
 ## [1.2.1](https://github.com/Brooooooklyn/lzma/compare/v1.2.0...v1.2.1) (2023-12-05)
 
 ### Bug Fixes
