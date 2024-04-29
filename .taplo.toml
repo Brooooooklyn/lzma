@@ -1,4 +1,4 @@
-exclude = ["node_modules/**/*.toml"]
+include = ["Cargo.toml", ".cargo/config.toml", ".taplo.toml"]
 
 # https://taplo.tamasfe.dev/configuration/formatter-options.html
 [formatting]
