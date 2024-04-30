@@ -1,3 +1,12 @@
+## [1.3.1](https://github.com/Brooooooklyn/lzma/compare/v1.3.0...v1.3.1) (2024-04-30)
+
+
+### Bug Fixes
+
+* add missing browser field ([5f56910](https://github.com/Brooooooklyn/lzma/commit/5f5691006fcd175015fd9a16aae9a944984f9a9f))
+
+
+
 # [1.3.0](https://github.com/Brooooooklyn/lzma/compare/v1.2.1...v1.3.0) (2024-04-29)
 
 
