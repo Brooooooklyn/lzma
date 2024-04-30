@@ -47,7 +47,8 @@
     "lzma.js",
     "lzma.d.ts",
     "lzma2.js",
-    "lzma2.d.ts"
+    "lzma2.d.ts",
+    "browser.js"
   ],
   "devDependencies": {
     "@napi-rs/cli": "^3.0.0-alpha.54",
@@ -102,6 +103,7 @@
     "singleQuote": true,
     "arrowParens": "always"
   },
+  "browser": "./browser.js",
   "exports": {
     ".": {
       "import": "./index.js",
