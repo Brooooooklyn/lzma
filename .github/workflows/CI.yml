@@ -67,8 +67,8 @@ jobs:
             target: aarch64-pc-windows-msvc
             build: yarn build --target aarch64-pc-windows-msvc
           - host: ubuntu-latest
-            target: wasm32-wasi-preview1-threads
-            build: yarn build --target wasm32-wasi-preview1-threads
+            target: wasm32-wasip1-threads
+            build: yarn build --target wasm32-wasip1-threads
     name: stable - ${{ matrix.settings.target }} - node@20
     runs-on: ${{ matrix.settings.host }}
     steps:
@@ -411,7 +411,7 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
-          name: bindings-wasm32-wasi-preview1-threads
+          name: bindings-wasm32-wasip1-threads
           path: .
       - name: List packages
         run: ls -R .
