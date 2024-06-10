@@ -122,5 +122,5 @@
       "require": "./lzma2.js"
     }
   },
-  "packageManager": "yarn@4.2.2"
+  "packageManager": "yarn@4.3.0"
 }
