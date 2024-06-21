@@ -893,58 +893,58 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@oxlint/darwin-arm64@npm:0.4.3":
-  version: 0.4.3
-  resolution: "@oxlint/darwin-arm64@npm:0.4.3"
+"@oxlint/darwin-arm64@npm:0.4.4":
+  version: 0.4.4
+  resolution: "@oxlint/darwin-arm64@npm:0.4.4"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"@oxlint/darwin-x64@npm:0.4.3":
-  version: 0.4.3
-  resolution: "@oxlint/darwin-x64@npm:0.4.3"
+"@oxlint/darwin-x64@npm:0.4.4":
+  version: 0.4.4
+  resolution: "@oxlint/darwin-x64@npm:0.4.4"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"@oxlint/linux-arm64-gnu@npm:0.4.3":
-  version: 0.4.3
-  resolution: "@oxlint/linux-arm64-gnu@npm:0.4.3"
+"@oxlint/linux-arm64-gnu@npm:0.4.4":
+  version: 0.4.4
+  resolution: "@oxlint/linux-arm64-gnu@npm:0.4.4"
   conditions: os=linux & cpu=arm64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@oxlint/linux-arm64-musl@npm:0.4.3":
-  version: 0.4.3
-  resolution: "@oxlint/linux-arm64-musl@npm:0.4.3"
+"@oxlint/linux-arm64-musl@npm:0.4.4":
+  version: 0.4.4
+  resolution: "@oxlint/linux-arm64-musl@npm:0.4.4"
   conditions: os=linux & cpu=arm64 & libc=musl
   languageName: node
   linkType: hard
 
-"@oxlint/linux-x64-gnu@npm:0.4.3":
-  version: 0.4.3
-  resolution: "@oxlint/linux-x64-gnu@npm:0.4.3"
+"@oxlint/linux-x64-gnu@npm:0.4.4":
+  version: 0.4.4
+  resolution: "@oxlint/linux-x64-gnu@npm:0.4.4"
   conditions: os=linux & cpu=x64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@oxlint/linux-x64-musl@npm:0.4.3":
-  version: 0.4.3
-  resolution: "@oxlint/linux-x64-musl@npm:0.4.3"
+"@oxlint/linux-x64-musl@npm:0.4.4":
+  version: 0.4.4
+  resolution: "@oxlint/linux-x64-musl@npm:0.4.4"
   conditions: os=linux & cpu=x64 & libc=musl
   languageName: node
   linkType: hard
 
-"@oxlint/win32-arm64@npm:0.4.3":
-  version: 0.4.3
-  resolution: "@oxlint/win32-arm64@npm:0.4.3"
+"@oxlint/win32-arm64@npm:0.4.4":
+  version: 0.4.4
+  resolution: "@oxlint/win32-arm64@npm:0.4.4"
   conditions: os=win32 & cpu=arm64
   languageName: node
   linkType: hard
 
-"@oxlint/win32-x64@npm:0.4.3":
-  version: 0.4.3
-  resolution: "@oxlint/win32-x64@npm:0.4.3"
+"@oxlint/win32-x64@npm:0.4.4":
+  version: 0.4.4
+  resolution: "@oxlint/win32-x64@npm:0.4.4"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
@@ -1029,11 +1029,11 @@ __metadata:
   linkType: hard
 
 "@types/node@npm:*, @types/node@npm:^20.12.7":
-  version: 20.14.2
-  resolution: "@types/node@npm:20.14.2"
+  version: 20.14.7
+  resolution: "@types/node@npm:20.14.7"
   dependencies:
     undici-types: "npm:~5.26.4"
-  checksum: 10c0/2d86e5f2227aaa42212e82ea0affe72799111b888ff900916376450b02b09b963ca888b20d9c332d8d2b833ed4781987867a38eaa2e4863fa8439071468b0a6f
+  checksum: 10c0/6211ffe86f769a58617e3bdca58610256021ef54bd99d2c442ee6109196cd6ee8e0bcd1cfac0e39bf4bb353f8900fa5fae540485a03816bd91ad1f86a0e18512
   languageName: node
   linkType: hard
 
@@ -1097,18 +1097,20 @@ __metadata:
   linkType: hard
 
 "acorn-walk@npm:^8.1.1, acorn-walk@npm:^8.3.2":
-  version: 8.3.2
-  resolution: "acorn-walk@npm:8.3.2"
-  checksum: 10c0/7e2a8dad5480df7f872569b9dccff2f3da7e65f5353686b1d6032ab9f4ddf6e3a2cb83a9b52cf50b1497fd522154dda92f0abf7153290cc79cd14721ff121e52
+  version: 8.3.3
+  resolution: "acorn-walk@npm:8.3.3"
+  dependencies:
+    acorn: "npm:^8.11.0"
+  checksum: 10c0/4a9e24313e6a0a7b389e712ba69b66b455b4cb25988903506a8d247e7b126f02060b05a8a5b738a9284214e4ca95f383dd93443a4ba84f1af9b528305c7f243b
   languageName: node
   linkType: hard
 
-"acorn@npm:^8.11.3, acorn@npm:^8.4.1, acorn@npm:^8.6.0":
-  version: 8.11.3
-  resolution: "acorn@npm:8.11.3"
+"acorn@npm:^8.11.0, acorn@npm:^8.11.3, acorn@npm:^8.4.1, acorn@npm:^8.6.0":
+  version: 8.12.0
+  resolution: "acorn@npm:8.12.0"
   bin:
     acorn: bin/acorn
-  checksum: 10c0/3ff155f8812e4a746fee8ecff1f227d527c4c45655bb1fad6347c3cb58e46190598217551b1500f18542d2bbe5c87120cb6927f5a074a59166fbdd9468f0a299
+  checksum: 10c0/a19f9dead009d3b430fa3c253710b47778cdaace15b316de6de93a68c355507bc1072a9956372b6c990cbeeb167d4a929249d0faeb8ae4bb6911d68d53299549
   languageName: node
   linkType: hard
 
@@ -2266,12 +2268,12 @@ __metadata:
   linkType: hard
 
 "foreground-child@npm:^3.1.0":
-  version: 3.1.1
-  resolution: "foreground-child@npm:3.1.1"
+  version: 3.2.1
+  resolution: "foreground-child@npm:3.2.1"
   dependencies:
     cross-spawn: "npm:^7.0.0"
     signal-exit: "npm:^4.0.1"
-  checksum: 10c0/9700a0285628abaeb37007c9a4d92bd49f67210f09067638774338e146c8e9c825c5c877f072b2f75f41dc6a2d0be8664f79ffc03f6576649f54a84fb9b47de0
+  checksum: 10c0/9a53a33dbd87090e9576bef65fb4a71de60f6863a8062a7b11bc1cbe3cc86d428677d7c0b9ef61cdac11007ac580006f78bd5638618d564cfd5e6fd713d6878f
   languageName: node
   linkType: hard
 
@@ -2385,17 +2387,18 @@ __metadata:
   linkType: hard
 
 "glob@npm:^10.2.2, glob@npm:^10.3.10":
-  version: 10.4.1
-  resolution: "glob@npm:10.4.1"
+  version: 10.4.2
+  resolution: "glob@npm:10.4.2"
   dependencies:
     foreground-child: "npm:^3.1.0"
     jackspeak: "npm:^3.1.2"
     minimatch: "npm:^9.0.4"
     minipass: "npm:^7.1.2"
+    package-json-from-dist: "npm:^1.0.0"
     path-scurry: "npm:^1.11.1"
   bin:
     glob: dist/esm/bin.mjs
-  checksum: 10c0/77f2900ed98b9cc2a0e1901ee5e476d664dae3cd0f1b662b8bfd4ccf00d0edc31a11595807706a274ca10e1e251411bbf2e8e976c82bed0d879a9b89343ed379
+  checksum: 10c0/2c7296695fa75a935f3ad17dc62e4e170a8bb8752cf64d328be8992dd6ad40777939003754e10e9741ff8fbe43aa52fba32d6930d0ffa0e3b74bc3fb5eebaa2f
   languageName: node
   linkType: hard
 
@@ -2505,7 +2508,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"hasown@npm:^2.0.0":
+"hasown@npm:^2.0.0, hasown@npm:^2.0.2":
   version: 2.0.2
   resolution: "hasown@npm:2.0.2"
   dependencies:
@@ -2685,11 +2688,11 @@ __metadata:
   linkType: hard
 
 "is-core-module@npm:^2.8.1":
-  version: 2.13.1
-  resolution: "is-core-module@npm:2.13.1"
+  version: 2.14.0
+  resolution: "is-core-module@npm:2.14.0"
   dependencies:
-    hasown: "npm:^2.0.0"
-  checksum: 10c0/2cba9903aaa52718f11c4896dabc189bab980870aae86a62dc0d5cedb546896770ee946fb14c84b7adf0735f5eaea4277243f1b95f5cefa90054f92fbcac2518
+    hasown: "npm:^2.0.2"
+  checksum: 10c0/ae8dbc82bd20426558bc8d20ce290ce301c1cfd6ae4446266d10cacff4c63c67ab16440ade1d72ced9ec41c569fbacbcee01e293782ce568527c4cdf35936e4c
   languageName: node
   linkType: hard
 
@@ -3363,17 +3366,17 @@ __metadata:
   linkType: hard
 
 "oxlint@npm:^0.4.0":
-  version: 0.4.3
-  resolution: "oxlint@npm:0.4.3"
+  version: 0.4.4
+  resolution: "oxlint@npm:0.4.4"
   dependencies:
-    "@oxlint/darwin-arm64": "npm:0.4.3"
-    "@oxlint/darwin-x64": "npm:0.4.3"
-    "@oxlint/linux-arm64-gnu": "npm:0.4.3"
-    "@oxlint/linux-arm64-musl": "npm:0.4.3"
-    "@oxlint/linux-x64-gnu": "npm:0.4.3"
-    "@oxlint/linux-x64-musl": "npm:0.4.3"
-    "@oxlint/win32-arm64": "npm:0.4.3"
-    "@oxlint/win32-x64": "npm:0.4.3"
+    "@oxlint/darwin-arm64": "npm:0.4.4"
+    "@oxlint/darwin-x64": "npm:0.4.4"
+    "@oxlint/linux-arm64-gnu": "npm:0.4.4"
+    "@oxlint/linux-arm64-musl": "npm:0.4.4"
+    "@oxlint/linux-x64-gnu": "npm:0.4.4"
+    "@oxlint/linux-x64-musl": "npm:0.4.4"
+    "@oxlint/win32-arm64": "npm:0.4.4"
+    "@oxlint/win32-x64": "npm:0.4.4"
   dependenciesMeta:
     "@oxlint/darwin-arm64":
       optional: true
@@ -3393,7 +3396,7 @@ __metadata:
       optional: true
   bin:
     oxlint: bin/oxlint
-  checksum: 10c0/5e2925a707821ae0a40a65c2481fa58d6d5eceaaa8dd94678c1c30a00448eaa06e0b937360f477fea483e75c0589003aa04dd2d407eba7895c58ba00b3db2abe
+  checksum: 10c0/fb44a9d9eb80f9867d13a992c6416eee97bcad5794eb1cc90b00856b4ff79a0214a03400b3f6eb3478ce01ea770e8eb2aba5c0266caf1dd93095412f40b06f10
   languageName: node
   linkType: hard
 
@@ -3420,6 +3423,13 @@ __metadata:
     find-up-simple: "npm:^1.0.0"
     load-json-file: "npm:^7.0.1"
   checksum: 10c0/f6c48930700b73a41d839bf2898b628d23665827488a4f34aed2d05e4a99d7a70a70ada115c3546765947fbc8accff94c0779da21ea084b25df47cb774531eeb
+  languageName: node
+  linkType: hard
+
+"package-json-from-dist@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "package-json-from-dist@npm:1.0.0"
+  checksum: 10c0/e3ffaf6ac1040ab6082a658230c041ad14e72fabe99076a2081bb1d5d41210f11872403fc09082daf4387fc0baa6577f96c9c0e94c90c394fd57794b66aa4033
   languageName: node
   linkType: hard
 
@@ -3512,11 +3522,11 @@ __metadata:
   linkType: hard
 
 "prettier@npm:^3.2.5":
-  version: 3.3.1
-  resolution: "prettier@npm:3.3.1"
+  version: 3.3.2
+  resolution: "prettier@npm:3.3.2"
   bin:
     prettier: bin/prettier.cjs
-  checksum: 10c0/c25a709c9f0be670dc6bcb190b622347e1dbeb6c3e7df8b0711724cb64d8647c60b839937a4df4df18e9cfb556c2b08ca9d24d9645eb5488a7fc032a2c4d5cb3
+  checksum: 10c0/39ed27d17f0238da6dd6571d63026566bd790d3d0edac57c285fbab525982060c8f1e01955fe38134ab10f0951a6076da37f015db8173c02f14bc7f0803a384c
   languageName: node
   linkType: hard
 
@@ -4131,29 +4141,29 @@ __metadata:
   linkType: hard
 
 "type-fest@npm:^4.6.0, type-fest@npm:^4.7.1":
-  version: 4.20.0
-  resolution: "type-fest@npm:4.20.0"
-  checksum: 10c0/d0b35152f7f0b34b3048fb14d93d8d6dfe6288d443a2ab7b7b8c1dd902278e092aa057ad7cfc30f269f17d42eeb14a19d4d147ecb14dff74a5941c5c82248efa
+  version: 4.20.1
+  resolution: "type-fest@npm:4.20.1"
+  checksum: 10c0/c31da16fe170a74c5b7e102e70e764ba8ec6ade128e782a56f842aefa07307df5a6353e6b5601d3b30ff2d856d8b955f89813df639e4758fedcf8e426b2d854e
   languageName: node
   linkType: hard
 
 "typescript@npm:^5.4.5":
-  version: 5.4.5
-  resolution: "typescript@npm:5.4.5"
+  version: 5.5.2
+  resolution: "typescript@npm:5.5.2"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 10c0/2954022ada340fd3d6a9e2b8e534f65d57c92d5f3989a263754a78aba549f7e6529acc1921913560a4b816c46dce7df4a4d29f9f11a3dc0d4213bb76d043251e
+  checksum: 10c0/8ca39b27b5f9bd7f32db795045933ab5247897660627251e8254180b792a395bf061ea7231947d5d7ffa5cb4cc771970fd4ef543275f9b559f08c9325cccfce3
   languageName: node
   linkType: hard
 
 "typescript@patch:typescript@npm%3A^5.4.5#optional!builtin<compat/typescript>":
-  version: 5.4.5
-  resolution: "typescript@patch:typescript@npm%3A5.4.5#optional!builtin<compat/typescript>::version=5.4.5&hash=5adc0c"
+  version: 5.5.2
+  resolution: "typescript@patch:typescript@npm%3A5.5.2#optional!builtin<compat/typescript>::version=5.5.2&hash=379a07"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 10c0/db2ad2a16ca829f50427eeb1da155e7a45e598eec7b086d8b4e8ba44e5a235f758e606d681c66992230d3fc3b8995865e5fd0b22a2c95486d0b3200f83072ec9
+  checksum: 10c0/a7b7ede75dc7fc32a76d0d0af6b91f5fbd8620890d84c906f663d8783bf3de6d7bd50f0430b8bb55eac88a38934af847ff709e7156e5138b95ae94cbd5f73e5b
   languageName: node
   linkType: hard
 
