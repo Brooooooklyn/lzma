@@ -476,8 +476,8 @@ __metadata:
   linkType: hard
 
 "@napi-rs/cli@npm:^3.0.0-alpha.58":
-  version: 3.0.0-alpha.58
-  resolution: "@napi-rs/cli@npm:3.0.0-alpha.58"
+  version: 3.0.0-alpha.59
+  resolution: "@napi-rs/cli@npm:3.0.0-alpha.59"
   dependencies:
     "@napi-rs/cross-toolchain": "npm:^0.0.16"
     "@napi-rs/wasm-tools": "npm:^0.0.2"
@@ -485,7 +485,7 @@ __metadata:
     clipanion: "npm:^3.2.1"
     colorette: "npm:^2.0.20"
     debug: "npm:^4.3.4"
-    emnapi: "npm:1.2.0"
+    emnapi: "npm:^1.2.0"
     inquirer: "npm:^10.0.0"
     js-yaml: "npm:^4.1.0"
     lodash-es: "npm:^4.17.21"
@@ -504,7 +504,7 @@ __metadata:
   bin:
     napi: ./dist/cli.js
     napi-raw: ./cli.mjs
-  checksum: 10c0/7c43b3ec0511b87769d047679ad800371fe20c7e8b59ee40b92a513067f34dfcb1087e310882f4504f5201387a5a66fd9fd26fceb60071091117b2b350261ec0
+  checksum: 10c0/39ff944b2ace1cc61853a30e41c4cfe01ea190d98cb7780f73d57e89b4373e370290065654c05596e43dfa57d97e047c1d52d87cdf4eeab64c894b0977ada3ab
   languageName: node
   linkType: hard
 
@@ -2049,7 +2049,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"emnapi@npm:1.2.0":
+"emnapi@npm:^1.2.0":
   version: 1.2.0
   resolution: "emnapi@npm:1.2.0"
   peerDependencies:
