@@ -5,46 +5,10 @@ extern crate napi_derive;
 
 macro_rules! define_functions {
   ($namespace:expr, $compress_algorithm:ident, $decompress_algorithm:ident) => {
-    use std::convert::TryFrom;
-
-    use napi::{bindgen_prelude::*, JsBuffer, JsBufferValue, Ref};
-
-    enum AsyncTaskData {
-      Buffer(Ref<JsBufferValue>),
-      String(String),
-    }
-
-    impl AsyncTaskData {
-      pub fn unref(&mut self, env: Env) -> Result<()> {
-        match self {
-          AsyncTaskData::Buffer(buffer) => buffer.unref(env).map(|_| ()),
-          AsyncTaskData::String(_) => Ok(()),
-        }
-      }
-    }
-
-    impl AsRef<[u8]> for AsyncTaskData {
-      fn as_ref(&self) -> &[u8] {
-        match &self {
-          AsyncTaskData::Buffer(buffer) => buffer.as_ref(),
-          AsyncTaskData::String(string) => string.as_bytes(),
-        }
-      }
-    }
-
-    impl TryFrom<Either<String, JsBuffer>> for AsyncTaskData {
-      type Error = Error;
-
-      fn try_from(value: Either<String, JsBuffer>) -> Result<Self> {
-        Ok(match value {
-          Either::A(string) => AsyncTaskData::String(string),
-          Either::B(buffer) => AsyncTaskData::Buffer(buffer.into_ref()?),
-        })
-      }
-    }
+    use napi::bindgen_prelude::*;
 
     #[repr(transparent)]
-    pub struct Compress(AsyncTaskData);
+    pub struct Compress(Either<String, Uint8Array>);
 
     #[napi(namespace = $namespace)]
     impl Task for Compress {
@@ -58,35 +22,35 @@ macro_rules! define_functions {
         Ok(output)
       }
 
-      fn resolve(&mut self, _env: Env, output: Self::Output) -> Result<Buffer> {
+      fn resolve(&mut self, _: Env, output: Self::Output) -> Result<Buffer> {
         Ok(output.into())
       }
 
-      fn finally(&mut self, env: Env) -> Result<()> {
-        self.0.unref(env)?;
+      fn finally(&mut self, _: Env) -> Result<()> {
+        if let Either::B(buffer) = &mut self.0 {
+          std::mem::drop(std::mem::replace(buffer, Uint8Array::from(vec![])));
+        }
         Ok(())
       }
     }
 
     #[napi(namespace = $namespace)]
     pub fn compress(
-      input: Either<String, JsBuffer>,
+      input: Either<String, Uint8Array>,
       signal: Option<AbortSignal>,
     ) -> Result<AsyncTask<Compress>> {
-      Ok(AsyncTask::with_optional_signal(
-        Compress(AsyncTaskData::try_from(input)?),
-        signal,
-      ))
+      Ok(AsyncTask::with_optional_signal(Compress(input), signal))
     }
 
     #[napi(namespace = $namespace)]
-    pub fn compress_sync(input: Either<String, JsBuffer>) -> Result<Buffer> {
-      let mut task = Compress(AsyncTaskData::try_from(input)?);
-      task.compute().map(|o| o.into())
+    pub fn compress_sync(input: Either<String, Uint8Array>) -> Result<Buffer> {
+      let mut output = Vec::with_capacity(input.as_ref().len());
+      lzma_rs::$compress_algorithm(&mut input.as_ref(), &mut output)?;
+      Ok(output.into())
     }
 
     #[repr(transparent)]
-    pub struct Decompress(Ref<JsBufferValue>);
+    pub struct Decompress(Uint8Array);
 
     #[napi(namespace = $namespace)]
     impl Task for Decompress {
@@ -101,31 +65,30 @@ macro_rules! define_functions {
         Ok(output)
       }
 
-      fn resolve(&mut self, _env: Env, output: Self::Output) -> Result<Buffer> {
+      fn resolve(&mut self, _: Env, output: Self::Output) -> Result<Buffer> {
         Ok(output.into())
       }
 
-      fn finally(&mut self, env: Env) -> Result<()> {
-        self.0.unref(env)?;
+      fn finally(&mut self, _: Env) -> Result<()> {
+        std::mem::drop(std::mem::replace(&mut self.0, Uint8Array::from(vec![])));
         Ok(())
       }
     }
 
     #[napi(namespace = $namespace)]
     pub fn decompress(
-      input: JsBuffer,
+      input: Uint8Array,
       signal: Option<AbortSignal>,
     ) -> Result<AsyncTask<Decompress>> {
-      Ok(AsyncTask::with_optional_signal(
-        Decompress(input.into_ref()?),
-        signal,
-      ))
+      Ok(AsyncTask::with_optional_signal(Decompress(input), signal))
     }
 
     #[napi(namespace = $namespace)]
-    pub fn decompress_sync(input: JsBuffer) -> Result<Buffer> {
-      let mut task = Decompress(input.into_ref()?);
-      task.compute().map(|o| o.into())
+    pub fn decompress_sync(mut input: &[u8]) -> Result<Buffer> {
+      let mut output = Vec::with_capacity(input.len());
+      lzma_rs::$decompress_algorithm(&mut input, &mut output)
+        .map_err(|err| napi::Error::new(napi::Status::InvalidArg, format!("{}", err)))?;
+      Ok(output.into())
     }
   };
 }
