@@ -1,4 +1,4 @@
-import { arch } from 'os'
+import { arch } from 'node:os'
 
 import test from 'ava'
 import type { Preset } from 'lzma-native'

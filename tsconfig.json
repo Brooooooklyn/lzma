@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
-    "target": "es2018",
-    "module": "commonjs",
+    "target": "ESNext",
+    "module": "ESNext",
     "strict": true,
-    "moduleResolution": "Node",
+    "moduleResolution": "Bundler",
     "allowJs": true,
     "sourceMap": true,
     "outDir": "dist"
