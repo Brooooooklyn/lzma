@@ -1,3 +1,13 @@
+# [1.4.0](https://github.com/Brooooooklyn/lzma/compare/v1.3.1...v1.4.0) (2024-09-16)
+
+
+### Bug Fixes
+
+* **deps:** update rust crate napi to 3.0.0-alpha ([#176](https://github.com/Brooooooklyn/lzma/issues/176)) ([cd01f0e](https://github.com/Brooooooklyn/lzma/commit/cd01f0e359155b13bca5078a1443fc1a763cd686))
+* **deps:** update rust crate napi-derive to 3.0.0-alpha ([#175](https://github.com/Brooooooklyn/lzma/issues/175)) ([9fb995b](https://github.com/Brooooooklyn/lzma/commit/9fb995bc804b01e09a8523768501c73b093f9731))
+
+
+
 ## [1.3.1](https://github.com/Brooooooklyn/lzma/compare/v1.3.0...v1.3.1) (2024-04-30)
 
 ### Bug Fixes
