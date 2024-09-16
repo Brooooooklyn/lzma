@@ -10,5 +10,9 @@
 *.debug text eol=lf merge=union 
 
 # Generated codes
-index.js linguist-detectable=false
-index.d.ts linguist-detectable=false
+index.js                linguist-detectable=false
+index.d.ts              linguist-detectable=false
+lzma.wasi-browser.js    linguist-detectable=false
+lzma.wasi.cjs           linguist-detectable=false
+wasi-worker-browser.mjs linguist-detectable=false
+wasi-worker.mjs         linguist-detectable=false
