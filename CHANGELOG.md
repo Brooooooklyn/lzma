@@ -1,3 +1,12 @@
+## [1.4.1](https://github.com/Brooooooklyn/lzma/compare/v1.4.0...v1.4.1) (2024-09-21)
+
+
+### Bug Fixes
+
+* exports browser field ([#192](https://github.com/Brooooooklyn/lzma/issues/192)) ([88c268f](https://github.com/Brooooooklyn/lzma/commit/88c268fe6d7b2d456f811c27f6f54386eac70558))
+
+
+
 # [1.4.0](https://github.com/Brooooooklyn/lzma/compare/v1.3.1...v1.4.0) (2024-09-16)
 
 
