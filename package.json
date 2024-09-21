@@ -111,7 +111,11 @@
   "exports": {
     ".": {
       "import": "./index.js",
-      "require": "./index.js"
+      "require": "./index.js",
+      "types": "./index.d.ts",
+      "browser": {
+        "import": "./browser.js"
+      }
     },
     "./xz": {
       "import": "./xz.js",
