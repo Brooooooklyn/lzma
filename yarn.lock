@@ -279,11 +279,11 @@ __metadata:
   linkType: hard
 
 "@inquirer/core@npm:^9.1.0":
-  version: 9.2.0
-  resolution: "@inquirer/core@npm:9.2.0"
+  version: 9.2.1
+  resolution: "@inquirer/core@npm:9.2.1"
   dependencies:
-    "@inquirer/figures": "npm:^1.0.5"
-    "@inquirer/type": "npm:^1.5.4"
+    "@inquirer/figures": "npm:^1.0.6"
+    "@inquirer/type": "npm:^2.0.0"
     "@types/mute-stream": "npm:^0.0.4"
     "@types/node": "npm:^22.5.5"
     "@types/wrap-ansi": "npm:^3.0.0"
@@ -294,7 +294,7 @@ __metadata:
     strip-ansi: "npm:^6.0.1"
     wrap-ansi: "npm:^6.2.0"
     yoctocolors-cjs: "npm:^2.1.2"
-  checksum: 10c0/e7982a75a55b9d2dcc4f5902df00a7b967b4a8dd9eafd6c22568237c416a13389d5bfcd275abe8e2f8e32c0fe6dd827be2070ad61d20022cd9339fa05b241e8e
+  checksum: 10c0/11c14be77a9fa85831de799a585721b0a49ab2f3b7d8fd1780c48ea2b29229c6bdc94e7892419086d0f7734136c2ba87b6a32e0782571eae5bbd655b1afad453
   languageName: node
   linkType: hard
 
@@ -320,10 +320,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@inquirer/figures@npm:^1.0.5":
-  version: 1.0.5
-  resolution: "@inquirer/figures@npm:1.0.5"
-  checksum: 10c0/ec9ba23db42cb33fa18eb919abf2a18e750e739e64c1883ce4a98345cd5711c60cac12d1faf56a859f52d387deb221c8d3dfe60344ee07955a9a262f8b821fe3
+"@inquirer/figures@npm:^1.0.5, @inquirer/figures@npm:^1.0.6":
+  version: 1.0.6
+  resolution: "@inquirer/figures@npm:1.0.6"
+  checksum: 10c0/2a00cf8db0b038dfb3b7ac9d09fe57ba12f0349e6258ad821bfa8e2e3cd9127f34b88ed7cae3e3441586f988db4df16ba91d6d701f88e529e87d2c2130a5c138
   languageName: node
   linkType: hard
 
@@ -412,12 +412,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@inquirer/type@npm:^1.5.3, @inquirer/type@npm:^1.5.4":
-  version: 1.5.4
-  resolution: "@inquirer/type@npm:1.5.4"
+"@inquirer/type@npm:^1.5.3":
+  version: 1.5.5
+  resolution: "@inquirer/type@npm:1.5.5"
   dependencies:
     mute-stream: "npm:^1.0.0"
-  checksum: 10c0/a29a690c8639a6b6326d35b1be43535fcffdb2c73da4a58b47c62445625f0c2b2ab63305d31ca37ef754ff3bb96ee16f332291df6c0000a86faa8cda41493038
+  checksum: 10c0/4c41736c09ba9426b5a9e44993bdd54e8f532e791518802e33866f233a2a6126a25c1c82c19d1abbf1df627e57b1b957dd3f8318ea96073d8bfc32193943bcb3
+  languageName: node
+  linkType: hard
+
+"@inquirer/type@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "@inquirer/type@npm:2.0.0"
+  dependencies:
+    mute-stream: "npm:^1.0.0"
+  checksum: 10c0/8c663d52beb2b89a896d3c3d5cc3d6d024fa149e565555bcb42fa640cbe23fba7ff2c51445342cef1fe6e46305e2d16c1590fa1d11ad0ddf93a67b655ef41f0a
   languageName: node
   linkType: hard
 
@@ -1206,58 +1215,58 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@oxlint/darwin-arm64@npm:0.9.5":
-  version: 0.9.5
-  resolution: "@oxlint/darwin-arm64@npm:0.9.5"
+"@oxlint/darwin-arm64@npm:0.9.6":
+  version: 0.9.6
+  resolution: "@oxlint/darwin-arm64@npm:0.9.6"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"@oxlint/darwin-x64@npm:0.9.5":
-  version: 0.9.5
-  resolution: "@oxlint/darwin-x64@npm:0.9.5"
+"@oxlint/darwin-x64@npm:0.9.6":
+  version: 0.9.6
+  resolution: "@oxlint/darwin-x64@npm:0.9.6"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"@oxlint/linux-arm64-gnu@npm:0.9.5":
-  version: 0.9.5
-  resolution: "@oxlint/linux-arm64-gnu@npm:0.9.5"
+"@oxlint/linux-arm64-gnu@npm:0.9.6":
+  version: 0.9.6
+  resolution: "@oxlint/linux-arm64-gnu@npm:0.9.6"
   conditions: os=linux & cpu=arm64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@oxlint/linux-arm64-musl@npm:0.9.5":
-  version: 0.9.5
-  resolution: "@oxlint/linux-arm64-musl@npm:0.9.5"
+"@oxlint/linux-arm64-musl@npm:0.9.6":
+  version: 0.9.6
+  resolution: "@oxlint/linux-arm64-musl@npm:0.9.6"
   conditions: os=linux & cpu=arm64 & libc=musl
   languageName: node
   linkType: hard
 
-"@oxlint/linux-x64-gnu@npm:0.9.5":
-  version: 0.9.5
-  resolution: "@oxlint/linux-x64-gnu@npm:0.9.5"
+"@oxlint/linux-x64-gnu@npm:0.9.6":
+  version: 0.9.6
+  resolution: "@oxlint/linux-x64-gnu@npm:0.9.6"
   conditions: os=linux & cpu=x64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@oxlint/linux-x64-musl@npm:0.9.5":
-  version: 0.9.5
-  resolution: "@oxlint/linux-x64-musl@npm:0.9.5"
+"@oxlint/linux-x64-musl@npm:0.9.6":
+  version: 0.9.6
+  resolution: "@oxlint/linux-x64-musl@npm:0.9.6"
   conditions: os=linux & cpu=x64 & libc=musl
   languageName: node
   linkType: hard
 
-"@oxlint/win32-arm64@npm:0.9.5":
-  version: 0.9.5
-  resolution: "@oxlint/win32-arm64@npm:0.9.5"
+"@oxlint/win32-arm64@npm:0.9.6":
+  version: 0.9.6
+  resolution: "@oxlint/win32-arm64@npm:0.9.6"
   conditions: os=win32 & cpu=arm64
   languageName: node
   linkType: hard
 
-"@oxlint/win32-x64@npm:0.9.5":
-  version: 0.9.5
-  resolution: "@oxlint/win32-x64@npm:0.9.5"
+"@oxlint/win32-x64@npm:0.9.6":
+  version: 0.9.6
+  resolution: "@oxlint/win32-x64@npm:0.9.6"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
@@ -3378,17 +3387,17 @@ __metadata:
   linkType: hard
 
 "oxlint@npm:^0.9.0":
-  version: 0.9.5
-  resolution: "oxlint@npm:0.9.5"
+  version: 0.9.6
+  resolution: "oxlint@npm:0.9.6"
   dependencies:
-    "@oxlint/darwin-arm64": "npm:0.9.5"
-    "@oxlint/darwin-x64": "npm:0.9.5"
-    "@oxlint/linux-arm64-gnu": "npm:0.9.5"
-    "@oxlint/linux-arm64-musl": "npm:0.9.5"
-    "@oxlint/linux-x64-gnu": "npm:0.9.5"
-    "@oxlint/linux-x64-musl": "npm:0.9.5"
-    "@oxlint/win32-arm64": "npm:0.9.5"
-    "@oxlint/win32-x64": "npm:0.9.5"
+    "@oxlint/darwin-arm64": "npm:0.9.6"
+    "@oxlint/darwin-x64": "npm:0.9.6"
+    "@oxlint/linux-arm64-gnu": "npm:0.9.6"
+    "@oxlint/linux-arm64-musl": "npm:0.9.6"
+    "@oxlint/linux-x64-gnu": "npm:0.9.6"
+    "@oxlint/linux-x64-musl": "npm:0.9.6"
+    "@oxlint/win32-arm64": "npm:0.9.6"
+    "@oxlint/win32-x64": "npm:0.9.6"
   dependenciesMeta:
     "@oxlint/darwin-arm64":
       optional: true
@@ -3408,7 +3417,7 @@ __metadata:
       optional: true
   bin:
     oxlint: bin/oxlint
-  checksum: 10c0/b886c93d6162c3904322a46b513e071792bd0bb4cc50d82009e8f332711524ebb5502c644b68cb08f9b56b00dc4402b7cda65429eb03942afca72be5847baac7
+  checksum: 10c0/b96eaabea1fbc33a2132dd7ea2f92494c520a0eef476abaa6255ce78dfe1d57e51fd786f8473216b0e188a8459b4b463ca2b247c7a89d1c91d5cdc12db2900a5
   languageName: node
   linkType: hard
 
