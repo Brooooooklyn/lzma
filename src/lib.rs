@@ -26,7 +26,7 @@ macro_rules! define_functions {
         Ok(output.into())
       }
 
-      fn finally(&mut self, _: Env) -> Result<()> {
+      fn finally(mut self, _: Env) -> Result<()> {
         if let Either::B(buffer) = &mut self.0 {
           std::mem::drop(std::mem::replace(buffer, Uint8Array::from(vec![])));
         }
@@ -69,7 +69,7 @@ macro_rules! define_functions {
         Ok(output.into())
       }
 
-      fn finally(&mut self, _: Env) -> Result<()> {
+      fn finally(mut self, _: Env) -> Result<()> {
         std::mem::drop(std::mem::replace(&mut self.0, Uint8Array::from(vec![])));
         Ok(())
       }
