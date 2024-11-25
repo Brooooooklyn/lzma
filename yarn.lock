@@ -1214,58 +1214,58 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@oxlint/darwin-arm64@npm:0.13.0":
-  version: 0.13.0
-  resolution: "@oxlint/darwin-arm64@npm:0.13.0"
+"@oxlint/darwin-arm64@npm:0.13.1":
+  version: 0.13.1
+  resolution: "@oxlint/darwin-arm64@npm:0.13.1"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"@oxlint/darwin-x64@npm:0.13.0":
-  version: 0.13.0
-  resolution: "@oxlint/darwin-x64@npm:0.13.0"
+"@oxlint/darwin-x64@npm:0.13.1":
+  version: 0.13.1
+  resolution: "@oxlint/darwin-x64@npm:0.13.1"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"@oxlint/linux-arm64-gnu@npm:0.13.0":
-  version: 0.13.0
-  resolution: "@oxlint/linux-arm64-gnu@npm:0.13.0"
+"@oxlint/linux-arm64-gnu@npm:0.13.1":
+  version: 0.13.1
+  resolution: "@oxlint/linux-arm64-gnu@npm:0.13.1"
   conditions: os=linux & cpu=arm64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@oxlint/linux-arm64-musl@npm:0.13.0":
-  version: 0.13.0
-  resolution: "@oxlint/linux-arm64-musl@npm:0.13.0"
+"@oxlint/linux-arm64-musl@npm:0.13.1":
+  version: 0.13.1
+  resolution: "@oxlint/linux-arm64-musl@npm:0.13.1"
   conditions: os=linux & cpu=arm64 & libc=musl
   languageName: node
   linkType: hard
 
-"@oxlint/linux-x64-gnu@npm:0.13.0":
-  version: 0.13.0
-  resolution: "@oxlint/linux-x64-gnu@npm:0.13.0"
+"@oxlint/linux-x64-gnu@npm:0.13.1":
+  version: 0.13.1
+  resolution: "@oxlint/linux-x64-gnu@npm:0.13.1"
   conditions: os=linux & cpu=x64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@oxlint/linux-x64-musl@npm:0.13.0":
-  version: 0.13.0
-  resolution: "@oxlint/linux-x64-musl@npm:0.13.0"
+"@oxlint/linux-x64-musl@npm:0.13.1":
+  version: 0.13.1
+  resolution: "@oxlint/linux-x64-musl@npm:0.13.1"
   conditions: os=linux & cpu=x64 & libc=musl
   languageName: node
   linkType: hard
 
-"@oxlint/win32-arm64@npm:0.13.0":
-  version: 0.13.0
-  resolution: "@oxlint/win32-arm64@npm:0.13.0"
+"@oxlint/win32-arm64@npm:0.13.1":
+  version: 0.13.1
+  resolution: "@oxlint/win32-arm64@npm:0.13.1"
   conditions: os=win32 & cpu=arm64
   languageName: node
   linkType: hard
 
-"@oxlint/win32-x64@npm:0.13.0":
-  version: 0.13.0
-  resolution: "@oxlint/win32-x64@npm:0.13.0"
+"@oxlint/win32-x64@npm:0.13.1":
+  version: 0.13.1
+  resolution: "@oxlint/win32-x64@npm:0.13.1"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
@@ -1322,11 +1322,11 @@ __metadata:
   linkType: hard
 
 "@types/node@npm:*, @types/node@npm:^22.0.0":
-  version: 22.9.0
-  resolution: "@types/node@npm:22.9.0"
+  version: 22.9.3
+  resolution: "@types/node@npm:22.9.3"
   dependencies:
     undici-types: "npm:~6.19.8"
-  checksum: 10c0/3f46cbe0a49bab4ba30494025e4c8a6e699b98ac922857aa1f0209ce11a1313ee46e6808b8f13fe5b8b960a9d7796b77c8d542ad4e9810e85ef897d5593b5d51
+  checksum: 10c0/954ec72bf29436ea62425a9563914a9c1e93f97b18194acd51d74d13998a701977547ed2985ed3a0e97211b785436d28377116e5f613bfcf3182d9bd81d784dc
   languageName: node
   linkType: hard
 
@@ -2042,13 +2042,13 @@ __metadata:
   linkType: hard
 
 "cross-spawn@npm:^7.0.0, cross-spawn@npm:^7.0.3":
-  version: 7.0.5
-  resolution: "cross-spawn@npm:7.0.5"
+  version: 7.0.6
+  resolution: "cross-spawn@npm:7.0.6"
   dependencies:
     path-key: "npm:^3.1.0"
     shebang-command: "npm:^2.0.0"
     which: "npm:^2.0.1"
-  checksum: 10c0/aa82ce7ac0814a27e6f2b738c5a7cf1fa21a3558a1e42df449fc96541ba3ba731e4d3ecffa4435348808a86212f287c6f20a1ee551ef1ff95d01cfec5f434944
+  checksum: 10c0/053ea8b2135caff68a9e81470e845613e374e7309a47731e81639de3eaeb90c3d01af0e0b44d2ab9d50b43467223b88567dfeb3262db942dc063b9976718ffc1
   languageName: node
   linkType: hard
 
@@ -3162,13 +3162,13 @@ __metadata:
   linkType: hard
 
 "node-gyp-build@npm:^4.2.1, node-gyp-build@npm:^4.2.2":
-  version: 4.8.3
-  resolution: "node-gyp-build@npm:4.8.3"
+  version: 4.8.4
+  resolution: "node-gyp-build@npm:4.8.4"
   bin:
     node-gyp-build: bin.js
     node-gyp-build-optional: optional.js
     node-gyp-build-test: build-test.js
-  checksum: 10c0/a7f43c4128d817db80bb0884f631121449ac586b4a3e708eab0db6fcb7fa0d2e66f6d7d4ee1f49469409de4a9b2e413926befe2dce70b850c6c583a3bbe228d2
+  checksum: 10c0/444e189907ece2081fe60e75368784f7782cfddb554b60123743dfb89509df89f1f29c03bbfa16b3a3e0be3f48799a4783f487da6203245fa5bed239ba7407e1
   languageName: node
   linkType: hard
 
@@ -3296,17 +3296,17 @@ __metadata:
   linkType: hard
 
 "oxlint@npm:^0.13.0":
-  version: 0.13.0
-  resolution: "oxlint@npm:0.13.0"
+  version: 0.13.1
+  resolution: "oxlint@npm:0.13.1"
   dependencies:
-    "@oxlint/darwin-arm64": "npm:0.13.0"
-    "@oxlint/darwin-x64": "npm:0.13.0"
-    "@oxlint/linux-arm64-gnu": "npm:0.13.0"
-    "@oxlint/linux-arm64-musl": "npm:0.13.0"
-    "@oxlint/linux-x64-gnu": "npm:0.13.0"
-    "@oxlint/linux-x64-musl": "npm:0.13.0"
-    "@oxlint/win32-arm64": "npm:0.13.0"
-    "@oxlint/win32-x64": "npm:0.13.0"
+    "@oxlint/darwin-arm64": "npm:0.13.1"
+    "@oxlint/darwin-x64": "npm:0.13.1"
+    "@oxlint/linux-arm64-gnu": "npm:0.13.1"
+    "@oxlint/linux-arm64-musl": "npm:0.13.1"
+    "@oxlint/linux-x64-gnu": "npm:0.13.1"
+    "@oxlint/linux-x64-musl": "npm:0.13.1"
+    "@oxlint/win32-arm64": "npm:0.13.1"
+    "@oxlint/win32-x64": "npm:0.13.1"
   dependenciesMeta:
     "@oxlint/darwin-arm64":
       optional: true
@@ -3327,7 +3327,7 @@ __metadata:
   bin:
     oxc_language_server: bin/oxc_language_server
     oxlint: bin/oxlint
-  checksum: 10c0/f7c4bc2e2f4581601a9a8c366e5ffb0f09e2ae29f27035af4d520c276d9515275b69254022b1ca429df7760cbd9472abcfa4aec5d5101473cbf608a7a165d787
+  checksum: 10c0/163a3999e040e94991bb80470087061ed740ce673d5addfa83062fdb2a83303b5c5528faa9be2115996bd20e6eec23fb16bc8d0b18d0ee9853222dfde3e53dc9
   languageName: node
   linkType: hard
 
@@ -3969,29 +3969,29 @@ __metadata:
   linkType: hard
 
 "type-fest@npm:^4.6.0, type-fest@npm:^4.7.1":
-  version: 4.27.0
-  resolution: "type-fest@npm:4.27.0"
-  checksum: 10c0/30c8ebe1219725021f5b5006081bd828c4e915de0de65e9a87065f566a96ece706846b2c874ac04c0dcfdfe6b4ae47ad15d3285c9aab162cb79c026dfb2e7556
+  version: 4.28.0
+  resolution: "type-fest@npm:4.28.0"
+  checksum: 10c0/fbaf766ae002c2b97e22cd1f48f20d6ff05915f25cf04632591e9ab52ee716cf38b9554f6198625c07e3e8bdf5277c284f8889cfe1fbea6fc19374706f2c75f8
   languageName: node
   linkType: hard
 
 "typescript@npm:^5.5.3":
-  version: 5.6.3
-  resolution: "typescript@npm:5.6.3"
+  version: 5.7.2
+  resolution: "typescript@npm:5.7.2"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 10c0/44f61d3fb15c35359bc60399cb8127c30bae554cd555b8e2b46d68fa79d680354b83320ad419ff1b81a0bdf324197b29affe6cc28988cd6a74d4ac60c94f9799
+  checksum: 10c0/a873118b5201b2ef332127ef5c63fb9d9c155e6fdbe211cbd9d8e65877283797cca76546bad742eea36ed7efbe3424a30376818f79c7318512064e8625d61622
   languageName: node
   linkType: hard
 
 "typescript@patch:typescript@npm%3A^5.5.3#optional!builtin<compat/typescript>":
-  version: 5.6.3
-  resolution: "typescript@patch:typescript@npm%3A5.6.3#optional!builtin<compat/typescript>::version=5.6.3&hash=8c6c40"
+  version: 5.7.2
+  resolution: "typescript@patch:typescript@npm%3A5.7.2#optional!builtin<compat/typescript>::version=5.7.2&hash=5786d5"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 10c0/7c9d2e07c81226d60435939618c91ec2ff0b75fbfa106eec3430f0fcf93a584bc6c73176676f532d78c3594fe28a54b36eb40b3d75593071a7ec91301533ace7
+  checksum: 10c0/f3b8082c9d1d1629a215245c9087df56cb784f9fb6f27b5d55577a20e68afe2a889c040aacff6d27e35be165ecf9dca66e694c42eb9a50b3b2c451b36b5675cb
   languageName: node
   linkType: hard
 
