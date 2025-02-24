@@ -517,8 +517,8 @@ __metadata:
   linkType: hard
 
 "@napi-rs/cli@npm:^3.0.0-alpha.62":
-  version: 3.0.0-alpha.70
-  resolution: "@napi-rs/cli@npm:3.0.0-alpha.70"
+  version: 3.0.0-alpha.71
+  resolution: "@napi-rs/cli@npm:3.0.0-alpha.71"
   dependencies:
     "@inquirer/prompts": "npm:^7.0.0"
     "@napi-rs/cross-toolchain": "npm:^0.0.19"
@@ -545,7 +545,7 @@ __metadata:
   bin:
     napi: ./dist/cli.js
     napi-raw: ./cli.mjs
-  checksum: 10c0/cc87d9966d31f5752d9b6d225bd0b9d722a772c9ea0be7af3782ef24b04bac11a54158acc22b5f88d3563723af6facf67a1d4f88880720bd093b0fdfaed63ecc
+  checksum: 10c0/f7d82677f24b872706b661e1ca46a80f0f2eefc7736732ac39d381593d69b2e7a85f52fb6a9e3cd4dd821d7e9d5e779f4dbd11a6a88e4e54a844ee6f6d4e2866
   languageName: node
   linkType: hard
 
@@ -774,13 +774,13 @@ __metadata:
   linkType: hard
 
 "@napi-rs/wasm-runtime@npm:^0.2.3, @napi-rs/wasm-runtime@npm:^0.2.4, @napi-rs/wasm-runtime@npm:^0.2.6":
-  version: 0.2.6
-  resolution: "@napi-rs/wasm-runtime@npm:0.2.6"
+  version: 0.2.7
+  resolution: "@napi-rs/wasm-runtime@npm:0.2.7"
   dependencies:
     "@emnapi/core": "npm:^1.3.1"
     "@emnapi/runtime": "npm:^1.3.1"
     "@tybys/wasm-util": "npm:^0.9.0"
-  checksum: 10c0/f921676c1d5c75494bd704c6c0837fd05fe95f5d1cb7373e32987ef5e00c3a1e90b5052352bd4b60ee20c3fe592af2dbba3b0de0c637218c25590828dbc4067e
+  checksum: 10c0/04a5edd79144bfa4e821a373fb6d4939f10c578c5f3633b5e67a57d0f5e36a593f595834d26654ea757bba7cd80b6c42d0d1405d6a8460c5d774e8cd5c9548a4
   languageName: node
   linkType: hard
 
@@ -1390,11 +1390,11 @@ __metadata:
   linkType: hard
 
 "@types/node@npm:*, @types/node@npm:^22.0.0":
-  version: 22.13.4
-  resolution: "@types/node@npm:22.13.4"
+  version: 22.13.5
+  resolution: "@types/node@npm:22.13.5"
   dependencies:
     undici-types: "npm:~6.20.0"
-  checksum: 10c0/3a234fa7766a3efc382cf81f66f474c26cdab2f54f43f757634c81c0444eb2160c2dabbde9741e4983078a318a88515b65416b5f1ab5478548579d7b3ead1d95
+  checksum: 10c0/a2e7ed7bb0690e439004779baedeb05159c5cc41ef6d81c7a6ebea5303fde4033669e1c0e41ff7453b45fd2fea8dbd55fddfcd052950c7fcae3167c970bca725
   languageName: node
   linkType: hard
 
@@ -2888,11 +2888,11 @@ __metadata:
   linkType: hard
 
 "memoize@npm:^10.0.0":
-  version: 10.0.0
-  resolution: "memoize@npm:10.0.0"
+  version: 10.1.0
+  resolution: "memoize@npm:10.1.0"
   dependencies:
-    mimic-function: "npm:^5.0.0"
-  checksum: 10c0/1584351834564be66b21d47b7afe495851f622669ad49e2f4fa4f35d5633471b93176cf602130a95f71fa0aee65a20179817ffac2dd11fa354aa19a8109a14e8
+    mimic-function: "npm:^5.0.1"
+  checksum: 10c0/6cf71f673b89778b05cd1131f573ba858627daa8fec60f2197328386acf7ab184a89e52527abbd5a605b5ccf5ee12dc0cb96efb651d9a30dcfcc89e9baacc84d
   languageName: node
   linkType: hard
 
@@ -2927,7 +2927,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mimic-function@npm:^5.0.0":
+"mimic-function@npm:^5.0.1":
   version: 5.0.1
   resolution: "mimic-function@npm:5.0.1"
   checksum: 10c0/f3d9464dd1816ecf6bdf2aec6ba32c0728022039d992f178237d8e289b48764fee4131319e72eedd4f7f094e22ded0af836c3187a7edc4595d28dd74368fd81d
@@ -3349,11 +3349,11 @@ __metadata:
   linkType: hard
 
 "prettier@npm:^3.3.3":
-  version: 3.5.1
-  resolution: "prettier@npm:3.5.1"
+  version: 3.5.2
+  resolution: "prettier@npm:3.5.2"
   bin:
     prettier: bin/prettier.cjs
-  checksum: 10c0/9f6f810eae455d6e4213845151a484a2338f2e0d6a8b84ee8e13a83af8a2421ef6c1e31e61e4b135671fb57b9541f6624648880cc2061ac803e243ac898c0123
+  checksum: 10c0/d7b597ed33f39c32ace675896ad187f06a3e48dc8a1e80051b5c5f0dae3586d53981704b8fda5ac3b080e6c2e0e197d239131b953702674f044351621ca5e1ac
   languageName: node
   linkType: hard
 
@@ -3842,9 +3842,9 @@ __metadata:
   linkType: hard
 
 "type-fest@npm:^4.6.0, type-fest@npm:^4.7.1":
-  version: 4.34.1
-  resolution: "type-fest@npm:4.34.1"
-  checksum: 10c0/4aa016be91f4225b772d77da91415cd25961a937f84e68d763b2dfeb936ef1671b039bbb0f75019affb8f591c26d65966024343aae75b17ab49db6f9c50c38a8
+  version: 4.35.0
+  resolution: "type-fest@npm:4.35.0"
+  checksum: 10c0/7032a8a940c33d45947a4ff0f74e3aa43b6fd8bb4745b32bba8e61ee47c0dd088cacd102f8377e9e889362e1ae8e0292b64a4c0698c1e42fd297bf6f8899d220
   languageName: node
   linkType: hard
 
