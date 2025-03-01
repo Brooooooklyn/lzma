@@ -131,7 +131,7 @@
       "require": "./lzma2.js"
     }
   },
-  "packageManager": "yarn@4.6.0",
+  "packageManager": "yarn@4.7.0",
   "funding": {
     "type": "github",
     "url": "https://github.com/sponsors/Brooooooklyn"
