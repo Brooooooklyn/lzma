@@ -1,5 +1,5 @@
 [package]
-edition = "2018"
+edition = "2024"
 name    = "napi_rs_xz"
 version = "0.0.0"
 
@@ -10,6 +10,12 @@ crate-type = ["cdylib"]
 lzma-rs     = { version = "0.3", features = ["stream"] }
 napi        = "3.0.0-alpha"
 napi-derive = "3.0.0-alpha"
+
+[target.'cfg(all(not(target_os = "linux"), not(target_os = "freebsd"), not(target_arch = "arm"), not(target_arch = "x86"), not(target_family = "wasm")))'.dependencies]
+mimalloc-safe = { version = "0.1", features = ["skip_collect_on_exit"] }
+
+[target.'cfg(any(target_os = "linux", target_os = "freebsd"))'.dependencies]
+mimalloc-safe = { version = "0.1", features = ["skip_collect_on_exit", "local_dynamic_tls"] }
 
 [build-dependencies]
 napi-build = "2"

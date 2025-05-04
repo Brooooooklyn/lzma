@@ -3,6 +3,14 @@
 #[macro_use]
 extern crate napi_derive;
 
+#[cfg(all(
+  not(target_arch = "x86"),
+  not(target_arch = "arm"),
+  not(target_family = "wasm")
+))]
+#[global_allocator]
+static ALLOC: mimalloc_safe::MiMalloc = mimalloc_safe::MiMalloc;
+
 macro_rules! define_functions {
   ($namespace:expr, $compress_algorithm:ident, $decompress_algorithm:ident) => {
     use napi::bindgen_prelude::*;
