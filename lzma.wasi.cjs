@@ -56,11 +56,11 @@ const { instance: __napiInstance, module: __wasiModule, napiModule: __napiModule
       return 4
     }
   })(),
+  reuseWorker: true,
   wasi: __wasi,
   onCreateWorker() {
     const worker = new Worker(__nodePath.join(__dirname, 'wasi-worker.mjs'), {
       env: process.env,
-      execArgv: ['--experimental-wasi-unstable-preview1'],
     })
     worker.onmessage = ({ data }) => {
       __wasmCreateOnMessageForFsProxy(__nodeFs)(data)
@@ -77,30 +77,14 @@ const { instance: __napiInstance, module: __wasiModule, napiModule: __napiModule
     return importObject
   },
   beforeInit({ instance }) {
-    __napi_rs_initialize_modules(instance)
-  }
+    for (const name of Object.keys(instance.exports)) {
+      if (name.startsWith('__napi_register__')) {
+        instance.exports[name]()
+      }
+    }
+  },
 })
 
-function __napi_rs_initialize_modules(__napiInstance) {
-  __napiInstance.exports['__napi_register__Compress_impl_0']?.()
-  __napiInstance.exports['__napi_register__compress_1']?.()
-  __napiInstance.exports['__napi_register__compress_sync_2']?.()
-  __napiInstance.exports['__napi_register__Decompress_impl_3']?.()
-  __napiInstance.exports['__napi_register__decompress_4']?.()
-  __napiInstance.exports['__napi_register__decompress_sync_5']?.()
-  __napiInstance.exports['__napi_register__Compress_impl_6']?.()
-  __napiInstance.exports['__napi_register__compress_7']?.()
-  __napiInstance.exports['__napi_register__compress_sync_8']?.()
-  __napiInstance.exports['__napi_register__Decompress_impl_9']?.()
-  __napiInstance.exports['__napi_register__decompress_10']?.()
-  __napiInstance.exports['__napi_register__decompress_sync_11']?.()
-  __napiInstance.exports['__napi_register__Compress_impl_12']?.()
-  __napiInstance.exports['__napi_register__compress_13']?.()
-  __napiInstance.exports['__napi_register__compress_sync_14']?.()
-  __napiInstance.exports['__napi_register__Decompress_impl_15']?.()
-  __napiInstance.exports['__napi_register__decompress_16']?.()
-  __napiInstance.exports['__napi_register__decompress_sync_17']?.()
-}
 module.exports.lzma = __napiModule.exports.lzma
 module.exports.lzma2 = __napiModule.exports.lzma2
 module.exports.xz = __napiModule.exports.xz
