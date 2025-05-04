@@ -1,3 +1,7 @@
+## [1.4.2](https://github.com/Brooooooklyn/lzma/compare/v1.4.1...v1.4.2) (2025-05-04)
+
+
+
 ## [1.4.1](https://github.com/Brooooooklyn/lzma/compare/v1.4.0...v1.4.1) (2024-09-21)
 
 
