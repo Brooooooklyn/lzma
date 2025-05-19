@@ -54,15 +54,14 @@
     "browser.js"
   ],
   "devDependencies": {
-    "@napi-rs/cli": "^3.0.0-alpha.62",
-    "@napi-rs/wasm-runtime": "^0.2.9",
+    "@napi-rs/cli": "^3.0.0-alpha.79",
+    "@napi-rs/wasm-runtime": "^0.2.10",
     "@oxc-node/core": "^0.0.27",
     "@taplo/cli": "^0.7.0",
     "@types/lzma-native": "^4.0.4",
     "@types/node": "^22.15.3",
     "ava": "^6.3.0",
     "conventional-changelog-cli": "^5.0.0",
-    "esbuild": "^0.25.3",
     "lzma": "^2.3.2",
     "lzma-native": "^8.0.6",
     "npm-run-all2": "^8.0.1",
@@ -82,7 +81,7 @@
     "format:rs": "cargo fmt",
     "format:source": "prettier --config ./package.json --write .",
     "format:toml": "taplo format",
-    "prepublishOnly": "napi prepublish -t npm && esbuild --minify --outfile=index.js --allow-overwrite index.js",
+    "prepublishOnly": "napi prepublish -t npm",
     "test": "ava",
     "version": "napi version && conventional-changelog -p angular -i CHANGELOG.md -s && git add CHANGELOG.md"
   },
@@ -108,7 +107,9 @@
     "singleQuote": true,
     "arrowParens": "always"
   },
-  "browser": "./browser.js",
+  "browser": {
+    "index.js": "./browser.js"
+  },
   "exports": {
     ".": {
       "import": "./index.js",
