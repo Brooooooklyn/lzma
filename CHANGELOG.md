@@ -1,3 +1,12 @@
+## [1.4.3](https://github.com/Brooooooklyn/lzma/compare/v1.4.2...v1.4.3) (2025-05-19)
+
+
+### Bug Fixes
+
+* browser field in package.json ([#260](https://github.com/Brooooooklyn/lzma/issues/260)) ([6f815bd](https://github.com/Brooooooklyn/lzma/commit/6f815bd5e7c8a4488fe7792b7bc2274252c29a51))
+
+
+
 ## [1.4.2](https://github.com/Brooooooklyn/lzma/compare/v1.4.1...v1.4.2) (2025-05-04)
 
 
