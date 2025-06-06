@@ -65,7 +65,7 @@
     "lzma": "^2.3.2",
     "lzma-native": "^8.0.6",
     "npm-run-all2": "^8.0.1",
-    "oxlint": "^0.17.0",
+    "oxlint": "^0.18.0",
     "prettier": "^3.5.3",
     "typescript": "^5.8.3"
   },
