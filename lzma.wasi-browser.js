@@ -5,13 +5,15 @@ import {
   WASI as __WASI,
 } from '@napi-rs/wasm-runtime'
 
-import __wasmUrl from './lzma.wasm32-wasi.wasm?url'
+
 
 const __wasi = new __WASI({
   version: 'preview1',
 })
 
+const __wasmUrl = new URL('./lzma.wasm32-wasi.wasm', import.meta.url).href
 const __emnapiContext = __emnapiGetDefaultContext()
+
 
 const __sharedMemory = new WebAssembly.Memory({
   initial: 4000,
@@ -54,6 +56,7 @@ const {
   },
 })
 export default __napiModule.exports
+export const Lzma = __napiModule.exports.Lzma
 export const lzma = __napiModule.exports.lzma
 export const lzma2 = __napiModule.exports.lzma2
 export const xz = __napiModule.exports.xz

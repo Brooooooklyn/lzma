@@ -3,6 +3,7 @@ env:
   DEBUG: napi:*
   APP_NAME: lzma
   MACOSX_DEPLOYMENT_TARGET: '10.13'
+  TARGET_CC: 'clang'
 'on':
   push:
     branches:
@@ -69,7 +70,7 @@ jobs:
           - host: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             setup: wget https://www.unpkg.com/@napi-rs/lzma-linux-x64-gnu/lzma.linux-x64-gnu.node
-            build: CC=clang yarn build --target x86_64-unknown-linux-gnu --use-napi-cross
+            build: yarn build --target x86_64-unknown-linux-gnu --use-napi-cross
           - host: ubuntu-latest
             target: x86_64-unknown-linux-musl
             build: yarn build --target x86_64-unknown-linux-musl -x
@@ -79,11 +80,11 @@ jobs:
           - host: ubuntu-latest
             target: aarch64-unknown-linux-gnu
             setup: wget https://www.unpkg.com/@napi-rs/lzma-linux-x64-gnu/lzma.linux-x64-gnu.node
-            build: CC=clang yarn build --target aarch64-unknown-linux-gnu --use-napi-cross
+            build: yarn build --target aarch64-unknown-linux-gnu --use-napi-cross
           - host: ubuntu-latest
             target: armv7-unknown-linux-gnueabihf
             setup: wget https://www.unpkg.com/@napi-rs/lzma-linux-x64-gnu/lzma.linux-x64-gnu.node
-            build: CC=clang yarn build --target armv7-unknown-linux-gnueabihf --use-napi-cross
+            build: yarn build --target armv7-unknown-linux-gnueabihf --use-napi-cross
           - host: ubuntu-latest
             target: aarch64-linux-android
             build: yarn build --target aarch64-linux-android
@@ -116,7 +117,9 @@ jobs:
             setup: |
               sudo apt-get update
               sudo apt-get install -y gcc-riscv64-linux-gnu g++-riscv64-linux-gnu
-            build: yarn build --platform --target riscv64gc-unknown-linux-gnu
+            build: |
+              unset TARGET_CC
+              yarn build --platform --target riscv64gc-unknown-linux-gnu
     name: stable - ${{ matrix.settings.target }} - node@22
     runs-on: ${{ matrix.settings.host }}
     steps:
@@ -149,7 +152,7 @@ jobs:
       - uses: goto-bus-stop/setup-zig@v2
         if: ${{ contains(matrix.settings.target, 'musl') }}
         with:
-          version: 0.13.0
+          version: 0.14.1
       - name: Install cargo-zigbuild
         uses: taiki-e/install-action@v2
         if: ${{ contains(matrix.settings.target, 'musl') }}
