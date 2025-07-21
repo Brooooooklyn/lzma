@@ -1,8 +1,5 @@
 #![deny(clippy::all)]
 
-#[macro_use]
-extern crate napi_derive;
-
 #[cfg(all(
   not(target_arch = "x86"),
   not(target_arch = "arm"),
@@ -13,15 +10,15 @@ static ALLOC: mimalloc_safe::MiMalloc = mimalloc_safe::MiMalloc;
 
 macro_rules! define_functions {
   ($namespace:expr, $compress_algorithm:ident, $decompress_algorithm:ident) => {
-    use napi::bindgen_prelude::*;
+    use napi::{ScopedTask, bindgen_prelude::*};
 
     #[repr(transparent)]
     pub struct Compress(Either<String, Uint8Array>);
 
-    #[napi(namespace = $namespace)]
-    impl Task for Compress {
+    #[napi_derive::napi(namespace = $namespace)]
+    impl<'task> ScopedTask<'task> for Compress {
       type Output = Vec<u8>;
-      type JsValue = Buffer;
+      type JsValue = BufferSlice<'task>;
 
       fn compute(&mut self) -> Result<Self::Output> {
         let mut data_ref = self.0.as_ref();
@@ -30,8 +27,8 @@ macro_rules! define_functions {
         Ok(output)
       }
 
-      fn resolve(&mut self, _: Env, output: Self::Output) -> Result<Buffer> {
-        Ok(output.into())
+      fn resolve(&mut self, env: &'task Env, output: Self::Output) -> Result<Self::JsValue> {
+        BufferSlice::from_data(env, output)
       }
 
       fn finally(mut self, _: Env) -> Result<()> {
@@ -42,7 +39,7 @@ macro_rules! define_functions {
       }
     }
 
-    #[napi(namespace = $namespace)]
+    #[napi_derive::napi(namespace = $namespace)]
     pub fn compress(
       input: Either<String, Uint8Array>,
       signal: Option<AbortSignal>,
@@ -50,7 +47,7 @@ macro_rules! define_functions {
       Ok(AsyncTask::with_optional_signal(Compress(input), signal))
     }
 
-    #[napi(namespace = $namespace)]
+    #[napi_derive::napi(namespace = $namespace)]
     pub fn compress_sync(input: Either<String, Uint8Array>) -> Result<Buffer> {
       let mut output = Vec::with_capacity(input.as_ref().len());
       lzma_rs::$compress_algorithm(&mut input.as_ref(), &mut output)?;
@@ -60,10 +57,10 @@ macro_rules! define_functions {
     #[repr(transparent)]
     pub struct Decompress(Uint8Array);
 
-    #[napi(namespace = $namespace)]
-    impl Task for Decompress {
+    #[napi_derive::napi(namespace = $namespace)]
+    impl<'task> ScopedTask<'task> for Decompress {
       type Output = Vec<u8>;
-      type JsValue = Buffer;
+      type JsValue = BufferSlice<'task>;
 
       fn compute(&mut self) -> Result<Self::Output> {
         let mut data_ref = self.0.as_ref();
@@ -73,8 +70,8 @@ macro_rules! define_functions {
         Ok(output)
       }
 
-      fn resolve(&mut self, _: Env, output: Self::Output) -> Result<Buffer> {
-        Ok(output.into())
+      fn resolve(&mut self, env: &'task Env, output: Self::Output) -> Result<Self::JsValue> {
+        BufferSlice::from_data(env, output)
       }
 
       fn finally(mut self, _: Env) -> Result<()> {
@@ -83,7 +80,7 @@ macro_rules! define_functions {
       }
     }
 
-    #[napi(namespace = $namespace)]
+    #[napi_derive::napi(namespace = $namespace)]
     pub fn decompress(
       input: Uint8Array,
       signal: Option<AbortSignal>,
@@ -91,7 +88,7 @@ macro_rules! define_functions {
       Ok(AsyncTask::with_optional_signal(Decompress(input), signal))
     }
 
-    #[napi(namespace = $namespace)]
+    #[napi_derive::napi(namespace = $namespace)]
     pub fn decompress_sync(mut input: &[u8]) -> Result<Buffer> {
       let mut output = Vec::with_capacity(input.len());
       lzma_rs::$decompress_algorithm(&mut input, &mut output)

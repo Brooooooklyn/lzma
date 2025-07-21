@@ -54,19 +54,19 @@
     "browser.js"
   ],
   "devDependencies": {
-    "@napi-rs/cli": "^3.0.0-alpha.79",
-    "@napi-rs/wasm-runtime": "^0.2.10",
+    "@napi-rs/cli": "^3.0.1",
+    "@napi-rs/wasm-runtime": "^1.0.0",
     "@oxc-node/core": "^0.0.29",
     "@taplo/cli": "^0.7.0",
     "@types/lzma-native": "^4.0.4",
-    "@types/node": "^22.15.3",
-    "ava": "^6.3.0",
+    "@types/node": "^24.0.15",
+    "ava": "^6.4.1",
     "conventional-changelog-cli": "^5.0.0",
     "lzma": "^2.3.2",
     "lzma-native": "^8.0.6",
-    "npm-run-all2": "^8.0.1",
-    "oxlint": "^1.0.0",
-    "prettier": "^3.5.3",
+    "npm-run-all2": "^8.0.4",
+    "oxlint": "^1.7.0",
+    "prettier": "^3.6.2",
     "typescript": "^5.8.3"
   },
   "engines": {

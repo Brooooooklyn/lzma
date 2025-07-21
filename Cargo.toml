@@ -8,8 +8,8 @@ crate-type = ["cdylib"]
 
 [dependencies]
 lzma-rs     = { version = "0.3", features = ["stream"] }
-napi        = "3.0.0-beta"
-napi-derive = "3.0.0-beta"
+napi        = "3"
+napi-derive = "3"
 
 [target.'cfg(all(not(target_os = "linux"), not(target_os = "freebsd"), not(target_arch = "arm"), not(target_arch = "x86"), not(target_family = "wasm")))'.dependencies]
 mimalloc-safe = { version = "0.1", features = ["skip_collect_on_exit"] }
