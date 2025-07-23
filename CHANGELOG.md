@@ -1,3 +1,12 @@
+## [1.4.4](https://github.com/Brooooooklyn/lzma/compare/v1.4.3...v1.4.4) (2025-07-23)
+
+
+### Features
+
+* upgrade to NAPI-RS 3.0 stable ([#280](https://github.com/Brooooooklyn/lzma/issues/280)) ([0a1188a](https://github.com/Brooooooklyn/lzma/commit/0a1188aac2077613b05fa0ea6e132db1155e6d87))
+
+
+
 ## [1.4.3](https://github.com/Brooooooklyn/lzma/compare/v1.4.2...v1.4.3) (2025-05-19)
 
 
