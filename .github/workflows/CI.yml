@@ -149,7 +149,7 @@ jobs:
         run: ${{ matrix.settings.setup }}
         if: ${{ matrix.settings.setup }}
         shell: bash
-      - uses: goto-bus-stop/setup-zig@v2
+      - uses: mlugg/setup-zig@v1
         if: ${{ contains(matrix.settings.target, 'musl') }}
         with:
           version: 0.14.1
