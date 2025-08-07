@@ -270,7 +270,7 @@ jobs:
         if: ${{ matrix.settings.target != 'aarch64-pc-windows-msvc' }}
         run: yarn install
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: bindings-${{ matrix.settings.target }}
           path: .
@@ -335,7 +335,7 @@ jobs:
           yarn config set --json supportedArchitectures.libc "[\"current\", \"glibc\", \"musl\"]"
           yarn install
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: bindings-${{ matrix.target }}
           path: .
@@ -369,7 +369,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: bindings-wasm32-wasip1-threads
           path: .
@@ -401,7 +401,7 @@ jobs:
       - name: Install dependencies
         run: yarn install
       - name: Download all artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           path: artifacts
       - name: create npm dirs
