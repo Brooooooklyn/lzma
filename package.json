@@ -56,7 +56,7 @@
   "devDependencies": {
     "@napi-rs/cli": "^3.0.1",
     "@napi-rs/wasm-runtime": "^1.0.0",
-    "@oxc-node/core": "^0.0.31",
+    "@oxc-node/core": "^0.0.32",
     "@taplo/cli": "^0.7.0",
     "@types/lzma-native": "^4.0.4",
     "@types/node": "^24.0.15",
