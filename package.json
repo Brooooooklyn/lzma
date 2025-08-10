@@ -1,6 +1,6 @@
 {
   "name": "@napi-rs/lzma",
-  "version": "1.4.4",
+  "version": "1.4.5",
   "description": "https://docs.rs/lzma-rs binding to Node.js via https://napi.rs",
   "napi": {
     "binaryName": "lzma",
