@@ -108,7 +108,6 @@ const { instance: __napiInstance, module: __wasiModule, napiModule: __napiModule
   },
 })
 module.exports = __napiModule.exports
-module.exports.Lzma = __napiModule.exports.Lzma
 module.exports.lzma = __napiModule.exports.lzma
 module.exports.lzma2 = __napiModule.exports.lzma2
 module.exports.xz = __napiModule.exports.xz

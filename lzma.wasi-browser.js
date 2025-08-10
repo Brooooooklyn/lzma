@@ -56,7 +56,6 @@ const {
   },
 })
 export default __napiModule.exports
-export const Lzma = __napiModule.exports.Lzma
 export const lzma = __napiModule.exports.lzma
 export const lzma2 = __napiModule.exports.lzma2
 export const xz = __napiModule.exports.xz
