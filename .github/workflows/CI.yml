@@ -23,7 +23,7 @@ jobs:
     name: Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup node
         uses: actions/setup-node@v4
@@ -121,7 +121,7 @@ jobs:
     name: stable - ${{ matrix.settings.target }} - node@22
     runs-on: ${{ matrix.settings.host }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Setup node
         uses: actions/setup-node@v4
         if: ${{ !matrix.settings.docker }}
@@ -186,7 +186,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Build FreeBSD
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Build
         id: build
         uses: cross-platform-actions/action@v0.29.0
@@ -254,7 +254,7 @@ jobs:
           - '22'
     runs-on: ${{ matrix.settings.host }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Setup node
         uses: actions/setup-node@v4
         with:
@@ -298,7 +298,7 @@ jobs:
           - '22'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Setup node
         uses: actions/setup-node@v4
         with:
@@ -365,7 +365,7 @@ jobs:
           - '22'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Download artifacts
         uses: actions/download-artifact@v5
         with:
@@ -393,7 +393,7 @@ jobs:
       - test-linux-binding
       - test-wasi-nodejs
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Setup node
         uses: actions/setup-node@v4
         with:
