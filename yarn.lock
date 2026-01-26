@@ -1143,58 +1143,58 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@oxlint/darwin-arm64@npm:1.39.0":
-  version: 1.39.0
-  resolution: "@oxlint/darwin-arm64@npm:1.39.0"
+"@oxlint/darwin-arm64@npm:1.41.0":
+  version: 1.41.0
+  resolution: "@oxlint/darwin-arm64@npm:1.41.0"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"@oxlint/darwin-x64@npm:1.39.0":
-  version: 1.39.0
-  resolution: "@oxlint/darwin-x64@npm:1.39.0"
+"@oxlint/darwin-x64@npm:1.41.0":
+  version: 1.41.0
+  resolution: "@oxlint/darwin-x64@npm:1.41.0"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"@oxlint/linux-arm64-gnu@npm:1.39.0":
-  version: 1.39.0
-  resolution: "@oxlint/linux-arm64-gnu@npm:1.39.0"
+"@oxlint/linux-arm64-gnu@npm:1.41.0":
+  version: 1.41.0
+  resolution: "@oxlint/linux-arm64-gnu@npm:1.41.0"
   conditions: os=linux & cpu=arm64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@oxlint/linux-arm64-musl@npm:1.39.0":
-  version: 1.39.0
-  resolution: "@oxlint/linux-arm64-musl@npm:1.39.0"
+"@oxlint/linux-arm64-musl@npm:1.41.0":
+  version: 1.41.0
+  resolution: "@oxlint/linux-arm64-musl@npm:1.41.0"
   conditions: os=linux & cpu=arm64 & libc=musl
   languageName: node
   linkType: hard
 
-"@oxlint/linux-x64-gnu@npm:1.39.0":
-  version: 1.39.0
-  resolution: "@oxlint/linux-x64-gnu@npm:1.39.0"
+"@oxlint/linux-x64-gnu@npm:1.41.0":
+  version: 1.41.0
+  resolution: "@oxlint/linux-x64-gnu@npm:1.41.0"
   conditions: os=linux & cpu=x64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@oxlint/linux-x64-musl@npm:1.39.0":
-  version: 1.39.0
-  resolution: "@oxlint/linux-x64-musl@npm:1.39.0"
+"@oxlint/linux-x64-musl@npm:1.41.0":
+  version: 1.41.0
+  resolution: "@oxlint/linux-x64-musl@npm:1.41.0"
   conditions: os=linux & cpu=x64 & libc=musl
   languageName: node
   linkType: hard
 
-"@oxlint/win32-arm64@npm:1.39.0":
-  version: 1.39.0
-  resolution: "@oxlint/win32-arm64@npm:1.39.0"
+"@oxlint/win32-arm64@npm:1.41.0":
+  version: 1.41.0
+  resolution: "@oxlint/win32-arm64@npm:1.41.0"
   conditions: os=win32 & cpu=arm64
   languageName: node
   linkType: hard
 
-"@oxlint/win32-x64@npm:1.39.0":
-  version: 1.39.0
-  resolution: "@oxlint/win32-x64@npm:1.39.0"
+"@oxlint/win32-x64@npm:1.41.0":
+  version: 1.41.0
+  resolution: "@oxlint/win32-x64@npm:1.41.0"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
@@ -1264,11 +1264,11 @@ __metadata:
   linkType: hard
 
 "@types/node@npm:*":
-  version: 25.0.9
-  resolution: "@types/node@npm:25.0.9"
+  version: 25.0.10
+  resolution: "@types/node@npm:25.0.10"
   dependencies:
     undici-types: "npm:~7.16.0"
-  checksum: 10c0/a757efafe303d9c8833eb53c2e9a0981cd5ac725cdc04c5612a71db86468c938778d4fa328be4231b68fffc68258638764df7b9c69e86cf55f0bb67105eb056f
+  checksum: 10c0/9edc3c812b487c32c76eebac7c87acae1f69515a0bc3f6b545806d513eb9e918c3217bf751dc93da39f60e06bf1b0caa92258ef3a6dd6457124b2e761e54f61f
   languageName: node
   linkType: hard
 
@@ -2567,9 +2567,9 @@ __metadata:
   linkType: hard
 
 "lodash@npm:^4.17.15":
-  version: 4.17.21
-  resolution: "lodash@npm:4.17.21"
-  checksum: 10c0/d8cbea072bb08655bb4c989da418994b073a608dffa608b09ac04b43a791b12aeae7cd7ad919aa4c925f33b48490b5cfe6c1f71d827956071dae2e7bb3a6b74c
+  version: 4.17.23
+  resolution: "lodash@npm:4.17.23"
+  checksum: 10c0/1264a90469f5bb95d4739c43eb6277d15b6d9e186df4ac68c3620443160fc669e2f14c11e7d8b2ccf078b81d06147c01a8ccced9aab9f9f63d50dcf8cace6bf6
   languageName: node
   linkType: hard
 
@@ -2581,9 +2581,9 @@ __metadata:
   linkType: hard
 
 "lru-cache@npm:^11.0.0, lru-cache@npm:^11.1.0, lru-cache@npm:^11.2.1":
-  version: 11.2.4
-  resolution: "lru-cache@npm:11.2.4"
-  checksum: 10c0/4a24f9b17537619f9144d7b8e42cd5a225efdfd7076ebe7b5e7dc02b860a818455201e67fbf000765233fe7e339d3c8229fc815e9b58ee6ede511e07608c19b2
+  version: 11.2.5
+  resolution: "lru-cache@npm:11.2.5"
+  checksum: 10c0/cc98958d25dddf1c8a8cbdc49588bd3b24450e8dfa78f32168fd188a20d4a0331c7406d0f3250c86a46619ee288056fd7a1195e8df56dc8a9592397f4fbd8e1d
   languageName: node
   linkType: hard
 
@@ -2953,19 +2953,19 @@ __metadata:
   linkType: hard
 
 "oxlint@npm:^1.11.1":
-  version: 1.39.0
-  resolution: "oxlint@npm:1.39.0"
+  version: 1.41.0
+  resolution: "oxlint@npm:1.41.0"
   dependencies:
-    "@oxlint/darwin-arm64": "npm:1.39.0"
-    "@oxlint/darwin-x64": "npm:1.39.0"
-    "@oxlint/linux-arm64-gnu": "npm:1.39.0"
-    "@oxlint/linux-arm64-musl": "npm:1.39.0"
-    "@oxlint/linux-x64-gnu": "npm:1.39.0"
-    "@oxlint/linux-x64-musl": "npm:1.39.0"
-    "@oxlint/win32-arm64": "npm:1.39.0"
-    "@oxlint/win32-x64": "npm:1.39.0"
+    "@oxlint/darwin-arm64": "npm:1.41.0"
+    "@oxlint/darwin-x64": "npm:1.41.0"
+    "@oxlint/linux-arm64-gnu": "npm:1.41.0"
+    "@oxlint/linux-arm64-musl": "npm:1.41.0"
+    "@oxlint/linux-x64-gnu": "npm:1.41.0"
+    "@oxlint/linux-x64-musl": "npm:1.41.0"
+    "@oxlint/win32-arm64": "npm:1.41.0"
+    "@oxlint/win32-x64": "npm:1.41.0"
   peerDependencies:
-    oxlint-tsgolint: ">=0.10.0"
+    oxlint-tsgolint: ">=0.11.1"
   dependenciesMeta:
     "@oxlint/darwin-arm64":
       optional: true
@@ -2988,7 +2988,7 @@ __metadata:
       optional: true
   bin:
     oxlint: bin/oxlint
-  checksum: 10c0/ef1e0d940332c6523228641b222d77bd67eae92185f8d82bda4feb26d0d195a62c73299896ddf87cceafb1e7089479128c0de416db05456b22c71badddfc0660
+  checksum: 10c0/723d138a95d9a2f187c8347afc4fb43c512cfea6ab525836910fa0aeb12f39496f03f8c3064134e144441dec5de27e14a72776afbbe77663935bd2cb64584e48
   languageName: node
   linkType: hard
 
@@ -3115,11 +3115,11 @@ __metadata:
   linkType: hard
 
 "prettier@npm:^3.6.2":
-  version: 3.8.0
-  resolution: "prettier@npm:3.8.0"
+  version: 3.8.1
+  resolution: "prettier@npm:3.8.1"
   bin:
     prettier: bin/prettier.cjs
-  checksum: 10c0/8926e9c9941a293b76c2d799089d038e9f6d84fb37702fc370bedd03b3c70d7fcf507e2e3c4f151f222d81820a3b74cac5e692c955cfafe34dd0d02616ce8327
+  checksum: 10c0/33169b594009e48f570471271be7eac7cdcf88a209eed39ac3b8d6d78984039bfa9132f82b7e6ba3b06711f3bfe0222a62a1bfb87c43f50c25a83df1b78a2c42
   languageName: node
   linkType: hard
 
@@ -3493,15 +3493,15 @@ __metadata:
   linkType: hard
 
 "tar@npm:^7.4.0, tar@npm:^7.5.2":
-  version: 7.5.3
-  resolution: "tar@npm:7.5.3"
+  version: 7.5.6
+  resolution: "tar@npm:7.5.6"
   dependencies:
     "@isaacs/fs-minipass": "npm:^4.0.0"
     chownr: "npm:^3.0.0"
     minipass: "npm:^7.1.2"
     minizlib: "npm:^3.1.0"
     yallist: "npm:^5.0.0"
-  checksum: 10c0/e5e3237bca325fbb33282d92d9807f4c8d81abaf71bf2627efdf93bd5610c146460c78fc7e9767d4ab5ae3c0b18af8197314c964f8cbd23b30b25bf4d42d7cb4
+  checksum: 10c0/08af3807035957650ad5f2a300c49ca4fe0566ac0ea5a23741a5b5103c6da42891a9eeaed39bc1fbcf21c5cac4dc846828a004727fb08b9d946322d3144d1fd2
   languageName: node
   linkType: hard
 
