@@ -60,7 +60,7 @@
     "@taplo/cli": "^0.7.0",
     "@types/lzma-native": "^4.0.4",
     "@types/node": "^24.2.1",
-    "ava": "^6.4.1",
+    "ava": "^7.0.0",
     "conventional-changelog-cli": "^5.0.0",
     "lzma": "^2.3.2",
     "lzma-native": "^8.0.6",
