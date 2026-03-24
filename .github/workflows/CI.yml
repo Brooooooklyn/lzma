@@ -126,7 +126,7 @@ jobs:
         uses: actions/setup-node@v6
         if: ${{ !matrix.settings.docker }}
         with:
-          node-version: 22
+          node-version: 24
           cache: yarn
       - name: Install
         uses: dtolnay/rust-toolchain@stable
@@ -150,7 +150,7 @@ jobs:
       - uses: mlugg/setup-zig@v2
         if: ${{ contains(matrix.settings.target, 'musl') }}
         with:
-          version: 0.14.1
+          version: 0.15.2
       - name: Install cargo-zigbuild
         uses: taiki-e/install-action@v2
         if: ${{ contains(matrix.settings.target, 'musl') }}
@@ -195,7 +195,7 @@ jobs:
           RUSTUP_IO_THREADS: 1
         with:
           operating_system: freebsd
-          version: '14.2'
+          version: '15.0'
           memory: 8G
           cpu_count: 3
           environment_variables: 'DEBUG RUSTUP_IO_THREADS'
@@ -250,8 +250,8 @@ jobs:
             target: aarch64-apple-darwin
             architecture: arm64
         node:
-          - '20'
           - '22'
+          - '24'
     runs-on: ${{ matrix.settings.host }}
     steps:
       - uses: actions/checkout@v6
@@ -296,6 +296,10 @@ jobs:
         node:
           - '20'
           - '22'
+          - '24'
+        exclude:
+          - target: armv7-unknown-linux-gnueabihf
+            node: '24'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -361,8 +365,8 @@ jobs:
       fail-fast: false
       matrix:
         node:
-          - '20'
           - '22'
+          - '24'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
