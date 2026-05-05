@@ -294,7 +294,6 @@ jobs:
           - powerpc64le-unknown-linux-gnu
           - s390x-unknown-linux-gnu
         node:
-          - '20'
           - '22'
           - '24'
         exclude:
