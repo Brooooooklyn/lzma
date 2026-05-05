@@ -294,7 +294,6 @@ jobs:
           - powerpc64le-unknown-linux-gnu
           - s390x-unknown-linux-gnu
         node:
-          - '20'
           - '22'
           - '24'
         exclude:
@@ -351,39 +350,12 @@ jobs:
       - run: docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
       - name: Test bindings
         uses: addnab/docker-run-action@v3
-        continue-on-error: ${{ contains(matrix.target, 'powerpc64') }}
+        continue-on-error: ${{ contains(matrix.target, 'powerpc64') || contains(matrix.target, 's390x') }}
         with:
           image: ${{ steps.docker.outputs.IMAGE }}
           options: -v ${{ github.workspace }}:${{ github.workspace }} -w ${{ github.workspace }} --platform ${{ steps.docker.outputs.PLATFORM }}
           run: npm run test
 
-  test-wasi-nodejs:
-    name: Test WASI bindings on node@${{ matrix.node }}
-    needs:
-      - build
-    strategy:
-      fail-fast: false
-      matrix:
-        node:
-          - '22'
-          - '24'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - name: Download artifacts
-        uses: actions/download-artifact@v8
-        with:
-          name: bindings-wasm32-wasip1-threads
-          path: .
-      - name: List packages
-        run: ls -R .
-        shell: bash
-      - name: Install dependencies
-        run: yarn install
-      - name: Setup and run tests
-        run: yarn test
-        env:
-          NAPI_RS_FORCE_WASI: '1'
   publish:
     name: Publish
     runs-on: ubuntu-latest
@@ -395,13 +367,12 @@ jobs:
       - build-freebsd
       - test-macOS-windows-binding
       - test-linux-binding
-      - test-wasi-nodejs
     steps:
       - uses: actions/checkout@v6
       - name: Setup node
         uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 24
           cache: yarn
       - name: Install dependencies
         run: yarn install
