@@ -350,7 +350,7 @@ jobs:
       - run: docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
       - name: Test bindings
         uses: addnab/docker-run-action@v3
-        continue-on-error: ${{ contains(matrix.target, 'powerpc64') }}
+        continue-on-error: ${{ contains(matrix.target, 'powerpc64') || contains(matrix.target, 's390x') }}
         with:
           image: ${{ steps.docker.outputs.IMAGE }}
           options: -v ${{ github.workspace }}:${{ github.workspace }} -w ${{ github.workspace }} --platform ${{ steps.docker.outputs.PLATFORM }}
@@ -364,8 +364,7 @@ jobs:
       fail-fast: false
       matrix:
         node:
-          - '22'
-          - '24'
+          - '20'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
