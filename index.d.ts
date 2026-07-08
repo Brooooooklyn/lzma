@@ -157,21 +157,33 @@ export interface Lzma2DecompressorOptions {
 
 export declare namespace lzma {
   export function compress(input: string | Uint8Array, signal?: AbortSignal | undefined | null): Promise<Buffer>
+  /** Compress a `ReadableStream<Uint8Array>` into a `.lzma` byte stream. */
+  export function compressStream(input: ReadableStream<Uint8Array>, options?: CompressorOptions | undefined | null): ReadableStream<Buffer>
   export function compressSync(input: string | Uint8Array): Buffer
   export function decompress(input: Uint8Array, signal?: AbortSignal | undefined | null): Promise<Buffer>
+  /** Decompress a `.lzma` `ReadableStream<Uint8Array>` into a plaintext stream. */
+  export function decompressStream(input: ReadableStream<Uint8Array>): ReadableStream<Buffer>
   export function decompressSync(input: Uint8Array): Buffer
 }
 
 export declare namespace lzma2 {
   export function compress(input: string | Uint8Array, signal?: AbortSignal | undefined | null): Promise<Buffer>
+  /** Compress a `ReadableStream<Uint8Array>` into a raw LZMA2 byte stream. */
+  export function compressStream(input: ReadableStream<Uint8Array>, options?: Lzma2CompressorOptions | undefined | null): ReadableStream<Buffer>
   export function compressSync(input: string | Uint8Array): Buffer
   export function decompress(input: Uint8Array, signal?: AbortSignal | undefined | null): Promise<Buffer>
+  /** Decompress a raw LZMA2 `ReadableStream<Uint8Array>` into a plaintext stream. */
+  export function decompressStream(input: ReadableStream<Uint8Array>, options?: Lzma2DecompressorOptions | undefined | null): ReadableStream<Buffer>
   export function decompressSync(input: Uint8Array): Buffer
 }
 
 export declare namespace xz {
   export function compress(input: string | Uint8Array, signal?: AbortSignal | undefined | null): Promise<Buffer>
+  /** Compress a `ReadableStream<Uint8Array>` into an `.xz` byte stream. */
+  export function compressStream(input: ReadableStream<Uint8Array>, options?: CompressorOptions | undefined | null): ReadableStream<Buffer>
   export function compressSync(input: string | Uint8Array): Buffer
   export function decompress(input: Uint8Array, signal?: AbortSignal | undefined | null): Promise<Buffer>
+  /** Decompress an `.xz` `ReadableStream<Uint8Array>` into a plaintext stream. */
+  export function decompressStream(input: ReadableStream<Uint8Array>): ReadableStream<Buffer>
   export function decompressSync(input: Uint8Array): Buffer
 }

@@ -1,7 +1,17 @@
 #![deny(clippy::all)]
 
 mod backend;
-mod stream;
+// `pub` so the `#[napi]` items (classes + the Web Streams fns) are part of the
+// crate's reachable API; otherwise a `cargo test` build (where the generated napi
+// registration is not counted as a use) flags the fns as dead code under
+// `-D warnings`. Mirrors the root-level `pub mod lzma/lzma2/xz` one-shot modules.
+pub mod stream;
+
+// Web Streams transforms use tokio (napi's `web_stream` feature), which the wasm
+// build has no runtime for; it is cfg'd out there and the JS wrapper falls back
+// to a buffered polyfill over the tokio-free class API.
+#[cfg(not(target_family = "wasm"))]
+pub mod stream_web;
 
 #[cfg(all(
   not(target_arch = "x86"),

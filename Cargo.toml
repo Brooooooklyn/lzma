@@ -16,6 +16,17 @@ lzma-rust2 = { version = "0.15", default-features = false, features = [
 napi = "3"
 napi-derive = "3"
 
+# The Web Streams transforms (`src/stream_web.rs`) need tokio + tokio-stream via
+# napi's `web_stream` feature. Enable it ONLY for non-wasm targets: cargo unions
+# features per-crate when the cfg matches, so the wasm build keeps plain `napi`
+# (no tokio) and drops the streaming module. This keeps a single tokio 1.x in the
+# tree and lets the wasm target compile without a tokio runtime.
+# `web_stream` only pulls `napi4`, but napi's ReadableStream finalizer calls
+# `napi_add_finalizer` (Node-API 5), so `napi5` is required alongside it. All
+# supported Node engines (^22.20 || ^24.12 || >=25) ship Node-API 9+.
+[target.'cfg(not(target_family = "wasm"))'.dependencies]
+napi = { version = "3", features = ["web_stream", "napi5"] }
+
 [target.'cfg(all(not(target_os = "linux"), not(target_os = "freebsd"), not(target_arch = "arm"), not(target_arch = "x86"), not(target_family = "wasm")))'.dependencies]
 mimalloc-safe = { version = "0.1", features = ["skip_collect_on_exit"] }
 

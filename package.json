@@ -51,6 +51,7 @@
     "lzma.d.ts",
     "lzma2.js",
     "lzma2.d.ts",
+    "stream-polyfill.js",
     "browser.js"
   ],
   "devDependencies": {

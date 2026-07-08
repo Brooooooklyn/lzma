@@ -218,6 +218,47 @@ export const chunkBySize = (buf: Buffer, size: number): Buffer[] => {
 /** Split a buffer into 1-byte chunks (worst-case boundary stress). */
 export const chunkByByte = (buf: Buffer): Buffer[] => chunkBySize(buf, 1)
 
+// ── Web Streams helpers (T4) ─────────────────────────────────────────────────
+
+/**
+ * Build a Web `ReadableStream<Uint8Array>` that emits `chunks` in order, one per
+ * `pull`. Used as the input source for `compressStream` / `decompressStream`.
+ */
+export const fromChunks = (chunks: readonly Uint8Array[]): ReadableStream<Uint8Array> => {
+  let i = 0
+  return new ReadableStream<Uint8Array>({
+    pull(controller) {
+      if (i < chunks.length) {
+        controller.enqueue(chunks[i++])
+      } else {
+        controller.close()
+      }
+    },
+  })
+}
+
+/**
+ * Drain a Web `ReadableStream` fully into a single Buffer (the sink for a
+ * transform's output). Each chunk is copied so the result never aliases the
+ * native/SharedArrayBuffer-backed output memory.
+ */
+export const collectStream = async (stream: ReadableStream<Uint8Array>): Promise<Buffer> => {
+  const reader = stream.getReader()
+  const chunks: Buffer[] = []
+  try {
+    for (;;) {
+      const { done, value } = await reader.read()
+      if (done) break
+      if (value && value.length) {
+        chunks.push(Buffer.from(value))
+      }
+    }
+  } finally {
+    reader.releaseLock()
+  }
+  return Buffer.concat(chunks)
+}
+
 /**
  * Split a buffer using a repeating, deliberately awkward size pattern so chunk
  * boundaries never line up with internal block / dictionary sizes.
