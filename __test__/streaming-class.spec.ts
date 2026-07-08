@@ -420,3 +420,84 @@ for (const ns of NAMESPACES) {
     t.throws(() => d.update(Buffer.alloc(1)), undefined, 'update() after finish() must throw')
   })
 }
+
+// ── 10) Sticky decode errors: update()-surfaced failure must taint finish() ───
+// THE REGRESSION (T3 review). A worker decode error surfaced FIRST by `update()`
+// used to be consumed once and dropped: a later `finish()` drained an already
+// empty channel from the exited worker and FALSELY resolved with a Buffer — a
+// success after the stream had already failed. The fix records the terminal
+// error as sticky, so `update()` AND `finish()` both keep rejecting once the
+// decoder has failed.
+
+// Clearly-invalid compressed bytes chosen so EACH format's decoder errors FAST
+// (before EOF), so `update()` — not just `finish()` — is the first to observe
+// it. Values are from lzma_rust2 0.15.8's eager validation:
+//   lzma : props byte 0xff > 224            → "invalid props byte" at header read
+//   lzma2: reserved control byte 0x20 on the first (dict-reset) chunk → "LZMA2:0"
+//          (0xff is a VALID LZMA2 LZMA-chunk control, so it would NOT fail fast)
+//   xz   : bytes with no XZ magic           → invalid stream header on first read
+const FAST_FAIL_GARBAGE: Record<Namespace, Buffer> = {
+  lzma: Buffer.alloc(64, 0xff),
+  lzma2: Buffer.alloc(64, 0x20),
+  xz: Buffer.alloc(64, 0xff),
+}
+
+/**
+ * Feed garbage, then poll `update()` (yielding to let the worker OS thread push
+ * its decode error onto the bounded out channel) until an `update()` call
+ * surfaces the error synchronously. Returns the thrown error. Bounded retries so
+ * a slow CI worker still gets a chance before we assert; throws if it never does.
+ */
+const updateUntilRejects = async (d: DecompressorInstance, garbage: Buffer): Promise<unknown> => {
+  const chunks: Buffer[] = [garbage, ...Array.from({ length: 200 }, () => Buffer.alloc(0))]
+  for (const chunk of chunks) {
+    try {
+      d.update(chunk)
+    } catch (err) {
+      return err // update() drained + surfaced the sticky decode error
+    }
+    // Give the worker thread a real timer tick to decode and push its error.
+    await new Promise((resolve) => setTimeout(resolve, 5))
+  }
+  throw new Error('update() never surfaced the worker decode error')
+}
+
+for (const ns of NAMESPACES) {
+  test(`${ns}: decode error is sticky — update() rejects, then finish() ALSO rejects`, async (t) => {
+    const Decompressor = loadDecompressor<DecompressorInstance>(ns)
+    const d = new Decompressor()
+    // 1) update() (the first driving call to reach the decoder) surfaces the
+    //    worker's decode error as a synchronous InvalidArg throw.
+    const err = await updateUntilRejects(d, FAST_FAIL_GARBAGE[ns])
+    t.true(isInvalidArg(err), `expected InvalidArg from update(), got ${String(err)}`)
+    // 2) A SUBSEQUENT update() also throws (fail-fast) — it must not silently
+    //    succeed by pushing more input to the dead worker.
+    t.throws(() => d.update(Buffer.alloc(1)), undefined, 'update() after a sticky failure must throw')
+    // 3) THE BUG: finish() after an update()-surfaced decode error MUST reject —
+    //    it must NOT resolve with a (empty) Buffer.
+    await t.throwsAsync(
+      () => d.finish(),
+      undefined,
+      'finish() must reject after an update()-surfaced decode error, not resolve with a Buffer',
+    )
+  })
+}
+
+// ── 11) finish() as the FIRST observer of the error (truncated, no draining) ──
+// The mirror case: feed a truncated-but-well-formed prefix (valid header, body
+// cut) so `update()` does NOT error (the worker blocks awaiting more input), then
+// `finish()` drops `in_tx` → the worker hits EOF mid-decode → error. finish()
+// must reject. (This path likely already held; kept as a sticky-error guard.)
+
+for (const ns of NAMESPACES) {
+  test(`${ns}: finish() rejects when it is the first to observe the decode error (truncated)`, async (t) => {
+    const compressed = await oneShot(ns).compress(INPUT)
+    const truncated = compressed.subarray(0, Math.max(1, Math.floor(compressed.length / 2)))
+    const Decompressor = loadDecompressor<DecompressorInstance>(ns)
+    const d = new Decompressor()
+    // Header parses; the worker consumes the prefix and parks awaiting more, so
+    // this update() returns (partial/empty) without an error.
+    d.update(truncated)
+    await t.throwsAsync(() => d.finish(), undefined, 'finish() must reject on a truncated stream')
+  })
+}

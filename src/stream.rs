@@ -363,11 +363,14 @@ fn pump_reader<R: Read>(mut reader: R, out_tx: &SyncSender<WorkerMsg>) {
   }
 }
 
-/// Re-wrap a worker message as a napi result. A worker error is always a decode
-/// failure (the [`ChannelReader`] never yields an `io::Error`), i.e. malformed
-/// input, so it maps to `InvalidArg` — matching the one-shot decode path.
-fn decode_msg(msg: WorkerMsg) -> Result<Vec<u8>> {
-  msg.map_err(|reason| napi::Error::new(napi::Status::InvalidArg, reason))
+/// Re-wrap a worker decode-error reason as the napi error the JS side sees. A
+/// worker error is always a decode failure (the [`ChannelReader`] never yields an
+/// `io::Error`), i.e. malformed input, so it maps to `InvalidArg` — matching the
+/// one-shot decode path. The reason is a `Send` `String`, so the SAME terminal
+/// error can be re-wrapped and surfaced more than once (by both `update()` and
+/// `finish()`), which is what makes the failure sticky.
+fn decode_error(reason: String) -> napi::Error {
+  napi::Error::new(napi::Status::InvalidArg, reason)
 }
 
 /// The double-finish / use-after-finish guard error (a clean napi error, never a
@@ -386,6 +389,13 @@ struct DecompressorState {
   /// module comment). `Sender`, not `SyncSender`.
   in_tx: Sender<Vec<u8>>,
   out_rx: Receiver<WorkerMsg>,
+  /// STICKY terminal decode error. The FIRST worker error a drain observes is
+  /// recorded here (its `Send` reason `String`) so EVERY later `update()` /
+  /// `finish()` rejects with the same error. Without it, an error surfaced by
+  /// `update()` would be consumed once and a later `finish()` — draining an
+  /// already-empty channel from an exited worker — would falsely resolve `Ok`,
+  /// a false success after the stream had already failed.
+  failed: Option<String>,
   /// `Some` until [`into_finish`](DecompressorState::into_finish) joins it.
   /// Dropped (detached) if the class is GC'd without `finish()`: the worker then
   /// EOFs on the dropped `in_tx` (and unparks from any `out_tx.send` when
@@ -421,8 +431,27 @@ impl DecompressorState {
     Ok(Self {
       in_tx,
       out_rx,
+      failed: None,
       worker: Some(worker),
     })
+  }
+
+  /// Non-blocking drain of the OUT channel into `out`. On the FIRST worker error,
+  /// record its reason as the [sticky](DecompressorState::failed) terminal
+  /// failure BEFORE returning the napi error, so every later `update()` /
+  /// `finish()` surfaces the same failure and no more input is pushed to the dead
+  /// worker. Shared by both `update_bytes` drain passes (keeps them DRY).
+  fn drain_available(&mut self, out: &mut Vec<u8>) -> Result<()> {
+    while let Ok(msg) = self.out_rx.try_recv() {
+      match msg {
+        Ok(bytes) => out.extend(bytes),
+        Err(reason) => {
+          self.failed = Some(reason.clone());
+          return Err(decode_error(reason));
+        }
+      }
+    }
+    Ok(())
   }
 
   /// Feed one chunk and return every decoded byte available so far (possibly
@@ -434,13 +463,19 @@ impl DecompressorState {
   /// here — it is on the bounded out-channel, where the worker parks on
   /// `out_tx.send`; each `update()`/`finish()` drains that channel so the worker
   /// can only ever run a bounded distance ahead. A decode error the worker has
-  /// already reported is surfaced eagerly by the drain.
+  /// already reported is surfaced eagerly by the drain and recorded as the
+  /// [sticky](DecompressorState::failed) terminal failure, so it is fail-fast
+  /// (rejects immediately, pushing no more input) on every later call.
   fn update_bytes(&mut self, chunk: &[u8]) -> Result<Vec<u8>> {
-    let mut out = Vec::new();
-    // Drain whatever the worker produced so far (also surfaces a decode error).
-    while let Ok(msg) = self.out_rx.try_recv() {
-      out.extend(decode_msg(msg)?);
+    // Fail fast: once the decoder has terminally failed, reject with the recorded
+    // reason and push NOTHING more to the (already exited) worker.
+    if let Some(reason) = &self.failed {
+      return Err(decode_error(reason.clone()));
     }
+    let mut out = Vec::new();
+    // Drain whatever the worker produced so far (also surfaces + records a decode
+    // error as sticky).
+    self.drain_available(&mut out)?;
     // Hand the chunk off without blocking. A send error means the worker already
     // exited (clean EOF or an error it already pushed onto the out channel);
     // that is not fatal here — the trailing output/error is drained above and in
@@ -448,15 +483,25 @@ impl DecompressorState {
     let _ = self.in_tx.send(chunk.to_vec());
     // Drain again: the handoff may have unblocked a worker parked on a full out
     // channel, and earlier input may have just now produced output.
-    while let Ok(msg) = self.out_rx.try_recv() {
-      out.extend(decode_msg(msg)?);
-    }
+    self.drain_available(&mut out)?;
     Ok(out)
   }
 
   /// Off the JS thread: signal EOF (drop `in_tx`), drain the decoded tail, join
   /// the worker, and surface any worker error. Consumes `self`.
   fn into_finish(mut self) -> Result<Vec<u8>> {
+    // A terminal decode error already observed (and recorded) by `update()`:
+    // still tear the worker down cleanly (drop `in_tx`, join), but REJECT —
+    // `finish()` must never resolve `Ok` once the stream has failed. The worker
+    // reported the error before exiting normally, so its `join()` cannot be a
+    // panic here; the recorded reason takes precedence.
+    if let Some(reason) = self.failed.take() {
+      drop(self.in_tx);
+      if let Some(handle) = self.worker.take() {
+        let _ = handle.join();
+      }
+      return Err(decode_error(reason));
+    }
     // Dropping the sender is the EOF signal the ChannelReader turns into
     // `Ok(0)` for the decoder.
     drop(self.in_tx);
@@ -465,10 +510,10 @@ impl DecompressorState {
     // `recv()` yields `Err(RecvError)` once the worker drops `out_tx` (it is
     // done), which ends the loop; a decode error breaks early.
     while let Ok(msg) = self.out_rx.recv() {
-      match decode_msg(msg) {
+      match msg {
         Ok(bytes) => out.extend(bytes),
-        Err(e) => {
-          decode_err = Some(e);
+        Err(reason) => {
+          decode_err = Some(decode_error(reason));
           break;
         }
       }
