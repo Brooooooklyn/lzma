@@ -80,12 +80,16 @@ for (const ns of NAMESPACES) {
 const isInvalidArg = (err: unknown): boolean => err instanceof Error && (err as { code?: string }).code === 'InvalidArg'
 
 for (const ns of NAMESPACES) {
-  test(`${ns}: out-of-range preset throws InvalidArg (does not crash)`, (t) => {
+  test(`${ns}: out-of-range / non-integer preset throws InvalidArg (no ToUint32 bypass)`, (t) => {
     const Compressor = loadCompressor(ns)
-    // Both the just-out-of-range 10 and an absurd 42 must be rejected (the crate
-    // would otherwise silently clamp to 9). This is pure validation — it throws
+    // 10 / 42: above the 0..=9 range (the crate would otherwise silently clamp
+    // to 9). 9.9 / NaN / Infinity / -1 / 2^32+9: values that napi's implicit
+    // `ToUint32` coercion would silently wrap/truncate into an in-range u32
+    // (9.9->9, NaN->0, Infinity->0, -1->wraps, 4294967305->9) if `preset` were a
+    // `u32` field. Because it is declared `f64`, the raw JS number reaches Rust
+    // and is rejected as non-integer / out-of-range. Pure validation — it throws
     // before any encoder/dictionary is allocated, so it is cheap on every arch.
-    for (const preset of [10, 42]) {
+    for (const preset of [10, 42, 9.9, NaN, Infinity, -1, 4294967305]) {
       const err = t.throws(() => new Compressor({ preset }))
       t.true(isInvalidArg(err), `expected an InvalidArg napi error for preset ${preset}, got ${String(err)}`)
     }
@@ -105,6 +109,19 @@ for (const ns of NAMESPACES) {
     }
   })
 }
+
+// Valid integer presets 0 and 9 must still construct after the f64-field change.
+// Only lzma2 is exercised at preset 9 because it pins its dictionary to 8 MiB
+// regardless of preset (A10), so the construct is memory-cheap and decodable by
+// the 8-MiB-pinned one-shot oracle — unlike lzma/xz, whose preset-9 dict is
+// 64 MiB (~750 MB alloc) and would be risky on constrained 32-bit CI legs.
+test('lzma2: valid integer presets 0 and 9 construct and round-trip (dict pinned 8 MiB)', async (t) => {
+  for (const preset of [0, 9]) {
+    const compressed = await driveClassCompress('lzma2', chunkBySize(INPUT, 64), { preset })
+    const restored = await oneShot('lzma2').decompress(compressed)
+    t.deepEqual(Buffer.from(restored), INPUT, `preset ${preset} must construct and round-trip`)
+  }
+})
 
 // Encoder dictionary cap (mirrors `MAX_DICT_SIZE` in `src/backend.rs`).
 // The cap equals preset 9's dictionary (64 MiB): `dictSize` must not let a
@@ -143,6 +160,20 @@ test('lzma2: dictSize just above the encoder cap (MAX_DICT_SIZE + 1) throws Inva
   const Lzma2Compressor = loadCompressor('lzma2')
   const err = t.throws(() => new Lzma2Compressor({ dictSize: MAX_DICT_SIZE + 1 }))
   t.true(isInvalidArg(err), `expected an InvalidArg napi error, got ${String(err)}`)
+})
+
+// The ToUint32-bypass cases: had `dictSize` stayed a `u32` field, each of these
+// JS numbers would be silently coerced into a DIFFERENT, in-range dictionary
+// (4194304.5->4194304, NaN->0, Infinity->0, -1->0xffffffff, 4294971392 (2^32+4096)
+// ->4096, -4294963200->4096) and accepted, so the caller would get a dictionary
+// they never requested. Because `dictSize` is `f64`, the raw number reaches Rust
+// and is rejected as non-integer / out-of-range BEFORE any writer is allocated.
+test('lzma2: non-integer / ToUint32-bypass dictSize throws InvalidArg', (t) => {
+  const Lzma2Compressor = loadCompressor('lzma2')
+  for (const dictSize of [4194304.5, NaN, Infinity, -1, 4294971392, -4294963200]) {
+    const err = t.throws(() => new Lzma2Compressor({ dictSize }))
+    t.true(isInvalidArg(err), `expected an InvalidArg napi error for dictSize ${dictSize}, got ${String(err)}`)
+  }
 })
 
 test('lzma2: valid 8 MiB dictSize constructs and round-trips via one-shot decode', async (t) => {

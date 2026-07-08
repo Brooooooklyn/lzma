@@ -55,6 +55,33 @@ pub fn map_invalid(err: io::Error) -> napi::Error {
 // and class layers do, so the checks live here and are reused).
 // ---------------------------------------------------------------------------
 
+/// Coerces a raw JS `number` (an ECMAScript `f64`) into a `u32`, rejecting any
+/// value napi's implicit `ToUint32` coercion would otherwise silently wrap or
+/// truncate into a *different*, in-range integer.
+///
+/// The `#[napi(object)]` numeric option fields (`preset`, `dictSize`) are
+/// declared `Option<f64>` precisely so the raw JS number reaches Rust
+/// **unmodified**. Had they been declared `Option<u32>`, napi would apply
+/// ECMAScript `ToUint32` *before* [`validate_preset`] / [`validate_dict_size`]
+/// ran — `9.9 -> 9`, `NaN -> 0`, `Infinity -> 0`, `2^32 + 9 -> 9`, negatives
+/// wrap — so out-of-contract input would be silently accepted as an in-range
+/// value and the caller would get a *different* preset/dictionary than they
+/// asked for. We instead require a finite, non-negative, integral value that
+/// fits in `u32`; anything else is rejected (surfaced as `InvalidArg` by the
+/// caller via [`map_invalid`]). The returned `u32` is then range-checked by the
+/// `validate_*` helpers, so the full pipeline is
+/// `f64 -> finite/integral/non-negative/<=u32 -> u32 -> range validate`.
+pub fn coerce_u32_index(value: f64, what: &str) -> io::Result<u32> {
+  if value.is_finite() && value.fract() == 0.0 && value >= 0.0 && value <= u32::MAX as f64 {
+    Ok(value as u32)
+  } else {
+    Err(io::Error::new(
+      io::ErrorKind::InvalidInput,
+      format!("{what} must be a non-negative integer within u32 range, got {value}"),
+    ))
+  }
+}
+
 /// Validates a compression preset against the range `lzma_rust2` accepts.
 ///
 /// The `*Options::set_preset` family silently CLAMPS anything above 9 to 9
@@ -434,6 +461,40 @@ mod tests {
     let compressed = encoder.finish().unwrap();
     assert_eq!(compressed, EMPTY_XZ_CRC64);
     assert!(xz_decompress(&compressed).unwrap().is_empty());
+  }
+
+  /// `coerce_u32_index` accepts only finite, non-negative, integral values that
+  /// fit in `u32` — the exact set of JS numbers that would NOT be silently
+  /// wrapped/truncated by napi's `ToUint32` had the option field stayed `u32`.
+  #[test]
+  fn coerce_u32_index_boundaries() {
+    // Accepted: integral, non-negative, within u32.
+    assert_eq!(coerce_u32_index(0.0, "preset").unwrap(), 0);
+    assert_eq!(coerce_u32_index(9.0, "preset").unwrap(), 9);
+    assert_eq!(
+      coerce_u32_index(u32::MAX as f64, "dictSize").unwrap(),
+      u32::MAX,
+      "u32::MAX is exactly representable as f64 and must be accepted"
+    );
+    // Rejected: non-finite.
+    assert!(coerce_u32_index(f64::NAN, "preset").is_err(), "NaN");
+    assert!(
+      coerce_u32_index(f64::INFINITY, "preset").is_err(),
+      "Infinity"
+    );
+    assert!(
+      coerce_u32_index(f64::NEG_INFINITY, "preset").is_err(),
+      "-Infinity"
+    );
+    // Rejected: negative.
+    assert!(coerce_u32_index(-1.0, "preset").is_err(), "-1.0");
+    // Rejected: non-integral (would be truncated by ToUint32).
+    assert!(coerce_u32_index(9.9, "preset").is_err(), "9.9");
+    // Rejected: above u32 (2^32 would wrap under ToUint32).
+    assert!(
+      coerce_u32_index((u32::MAX as f64) + 1.0, "dictSize").is_err(),
+      "(u32::MAX as f64) + 1.0 (== 2^32) must be rejected"
+    );
   }
 
   /// `validate_preset` accepts the full `0..=9` range and rejects everything

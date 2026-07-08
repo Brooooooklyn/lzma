@@ -90,7 +90,7 @@ impl Task for CompressorFinish {
 #[derive(Default)]
 pub struct CompressorOptions {
   /// Compression preset `0..=9` (default 6). Higher = smaller output, slower.
-  pub preset: Option<u32>,
+  pub preset: Option<f64>,
 }
 
 /// Options for the LZMA2 streaming compressor: adds an explicit dictionary size
@@ -99,9 +99,9 @@ pub struct CompressorOptions {
 #[derive(Default)]
 pub struct Lzma2CompressorOptions {
   /// Compression preset `0..=9` (default 6).
-  pub preset: Option<u32>,
+  pub preset: Option<f64>,
   /// Dictionary size in bytes (defaults to 8 MiB, [`backend::LZMA2_DICT_SIZE`]).
-  pub dict_size: Option<u32>,
+  pub dict_size: Option<f64>,
 }
 
 /// Generates a top-level `#[napi]` streaming compressor class.
@@ -181,7 +181,12 @@ define_compressor! {
   writer: LzmaWriter<SharedSink>,
   drain: inner_mut,
   build: |opts| {
-    let preset = backend::validate_preset(opts.preset.unwrap_or(DEFAULT_PRESET)).map_err(map_invalid)?;
+    let preset = opts
+      .preset
+      .map(|value| backend::coerce_u32_index(value, "preset").and_then(backend::validate_preset))
+      .transpose()
+      .map_err(map_invalid)?
+      .unwrap_or(DEFAULT_PRESET);
     backend::lzma_writer(SharedSink::default(), preset).map_err(map_io)
   },
 }
@@ -193,12 +198,17 @@ define_compressor! {
   writer: Lzma2Writer<SharedSink>,
   drain: inner_mut,
   build: |opts| {
-    let preset = backend::validate_preset(opts.preset.unwrap_or(DEFAULT_PRESET)).map_err(map_invalid)?;
+    let preset = opts
+      .preset
+      .map(|value| backend::coerce_u32_index(value, "preset").and_then(backend::validate_preset))
+      .transpose()
+      .map_err(map_invalid)?
+      .unwrap_or(DEFAULT_PRESET);
     // `None` keeps the pinned `LZMA2_DICT_SIZE` default (A10); an explicit value
     // is range-checked so it can never panic/OOM the infallible `Lzma2Writer`.
     let dict_size = opts
       .dict_size
-      .map(backend::validate_dict_size)
+      .map(|value| backend::coerce_u32_index(value, "dictSize").and_then(backend::validate_dict_size))
       .transpose()
       .map_err(map_invalid)?;
     Ok(backend::lzma2_writer(SharedSink::default(), preset, dict_size))
@@ -212,7 +222,12 @@ define_compressor! {
   writer: XzEncoder<SharedSink>,
   drain: sink_mut,
   build: |opts| {
-    let preset = backend::validate_preset(opts.preset.unwrap_or(DEFAULT_PRESET)).map_err(map_invalid)?;
+    let preset = opts
+      .preset
+      .map(|value| backend::coerce_u32_index(value, "preset").and_then(backend::validate_preset))
+      .transpose()
+      .map_err(map_invalid)?
+      .unwrap_or(DEFAULT_PRESET);
     XzEncoder::new(SharedSink::default(), preset).map_err(map_io)
   },
 }
