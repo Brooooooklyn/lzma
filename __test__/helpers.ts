@@ -43,6 +43,79 @@ import * as xzOneShot from '../xz'
 // bound to this file. Used only to lazily resolve the native classes below.
 const requireFrom = createRequire(import.meta.url)
 
+/** True when the suite runs against the WASI-forced binding (`NAPI_RS_FORCE_WASI`). */
+export const IS_WASI = !!process.env.NAPI_RS_FORCE_WASI
+
+/**
+ * Whether the T6 streaming suites should EXERCISE the streaming APIs under WASI.
+ *
+ * `false` for now. The incremental CLASS API is tokio-free and DOES build/run on
+ * the wasm target, but these robustness / cross-compat suites are not yet part of
+ * the WASI CI leg here, and the native Web-Streams transforms are compiled out on
+ * wasm entirely (a buffered polyfill replaces them — see `stream-polyfill.mjs`).
+ *
+ * Gating on this flag lets the CLASS-decode cases self-SKIP under WASI (an honest
+ * ava skip, never a silent pass) and the WEB-stream cases skip unconditionally
+ * under WASI. Flip to `true` once the WASI leg runs these suites against the
+ * class API.
+ */
+export const SUPPORTS_STREAMING_WASI = false
+
+/**
+ * An independent C/liblzma oracle (`lzma-native`) for strict footer/end-marker
+ * validation and cross-implementation interop. Returns `null` when the addon
+ * cannot load — under WASI, or on an arch with no `lzma-native` prebuild (the
+ * qemu-docker s390x / ppc64le / riscv64 / armv7 / aarch64-musl CI legs) — so the
+ * caller can register a genuine ava SKIP rather than a silent pass or a hard
+ * failure on those legitimate targets. `xz` uses the default `.xz` container;
+ * `lzma` uses the `LZMA()` engine's `.lzma` (alone) container, matching our
+ * per-namespace codecs.
+ */
+export interface LzmaNativeOracle {
+  decodeXz(buf: Uint8Array): Promise<Buffer>
+  decodeLzma(buf: Uint8Array): Promise<Buffer>
+  encodeXz(buf: Uint8Array): Promise<Buffer>
+  encodeLzma(buf: Uint8Array): Promise<Buffer>
+}
+
+export const loadLzmaNative = (): LzmaNativeOracle | null => {
+  if (IS_WASI) {
+    return null
+  }
+  try {
+    const lzmaNative = requireFrom('lzma-native')
+    return {
+      decodeXz: (buf) =>
+        new Promise((resolve, reject) => {
+          lzmaNative.decompress(buf, (result: Buffer | null) =>
+            result ? resolve(Buffer.from(result)) : reject(new Error('lzma-native failed to decode xz')),
+          )
+        }),
+      decodeLzma: (buf) => {
+        const engine = lzmaNative.LZMA()
+        return new Promise((resolve, reject) => {
+          engine.decompress(buf, (result: Buffer | null) =>
+            result ? resolve(Buffer.from(result)) : reject(new Error('lzma-native failed to decode lzma')),
+          )
+        })
+      },
+      encodeXz: (buf) =>
+        new Promise((resolve) => {
+          lzmaNative.compress(buf, 6, (result: Buffer) => resolve(Buffer.from(result)))
+        }),
+      encodeLzma: (buf) => {
+        const engine = lzmaNative.LZMA()
+        return new Promise((resolve) => {
+          engine.compress(buf, 6, (result: Buffer) => resolve(Buffer.from(result)))
+        })
+      },
+    }
+  } catch {
+    // `lzma-native` is unavailable here (WASI or a prebuild-less arch).
+    return null
+  }
+}
+
 export type Namespace = 'lzma' | 'lzma2' | 'xz'
 
 /** A newable native class. T2/T3 pin the concrete instance / options shape. */
