@@ -12,8 +12,8 @@
 use std::io::{self, Read, Write};
 
 use lzma_rust2::{
-  DICT_SIZE_MAX, DICT_SIZE_MIN, Lzma2Options, Lzma2Reader, Lzma2Writer, LzmaOptions, LzmaReader,
-  LzmaWriter, XzOptions, XzReader, XzWriter,
+  DICT_SIZE_MIN, Lzma2Options, Lzma2Reader, Lzma2Writer, LzmaOptions, LzmaReader, LzmaWriter,
+  XzOptions, XzReader, XzWriter,
 };
 
 /// Canonical LZMA2 dictionary size (8 MiB).
@@ -74,23 +74,54 @@ pub fn validate_preset(preset: u32) -> io::Result<u32> {
   Ok(preset)
 }
 
-/// Validates a raw-LZMA2 dictionary size against `lzma_rust2`'s accepted range
-/// ([`DICT_SIZE_MIN`]`..=`[`DICT_SIZE_MAX`]).
+/// Project-owned maximum **encoder** dictionary size (256 MiB).
+///
+/// `lzma_rust2` exports `DICT_SIZE_MAX` (`!15` == `0xFFFF_FFF0`), but that bound
+/// is *decode*-oriented and is **unsafe to feed to the encoder**. Constructing
+/// an encoder at dictionary size `D` reaches `Bt4::new` (`lzma_rust2`
+/// `lz/bt4.rs`), which does `let cyclic_size = dict_size as i32 + 1;`. For any
+/// `D > i32::MAX` (`0x7FFF_FFFF`) the `as i32` cast wraps negative and the `+ 1`
+/// overflows (panic in a debug build); it then allocates
+/// `vec![0i32; cyclic_size * 2]` — roughly `8 * D` bytes — so a value near
+/// `DICT_SIZE_MAX` demands tens of GiB and aborts the process (OOM) in release.
+/// A single *catchable* JS constructor call
+/// (`new Lzma2Compressor({ dictSize: 0xfffffff0 })`) could therefore take down
+/// the whole Node process. We cap the encoder here so validation always yields a
+/// clean `InvalidArg` instead.
+///
+/// The 256 MiB value is verified against `lzma_rust2` 0.15.8 to satisfy:
+/// * **No overflow:** `256 << 20` (`0x1000_0000`) is ~1/8 of `i32::MAX`, so
+///   `dict_size as i32 + 1` in `Bt4::new` can never wrap.
+/// * **Never rejects a preset:** the largest preset dictionary is preset 9's
+///   64 MiB (`PRESET_TO_DICT_SIZE[9] == 1 << 26`), comfortably under the cap, so
+///   plain `{ preset }` usage is never affected.
+/// * **Bounded memory:** the BT4 encoder allocates roughly `11.5 * D` (BT4 tree
+///   `~8x`, `Hash234` hash4 table `~1-2x`, sliding-window buffer `~1.5x`). At
+///   the 256 MiB cap that is a documented worst case of ~2.9 GiB per instance;
+///   normal preset-9 usage (64 MiB) is ~0.7 GiB. Large dictionaries are an
+///   explicit opt-in, so this ceiling is deliberate, not a default cost.
+pub const MAX_DICT_SIZE: u32 = 256 << 20;
+
+/// Validates a raw-LZMA2 dictionary size against the encoder-safe range
+/// ([`DICT_SIZE_MIN`]`..=`[`MAX_DICT_SIZE`]).
 ///
 /// [`lzma2_writer`] feeds `dict_size` straight into [`Lzma2Writer::new`], which
-/// is infallible and immediately sizes an internal buffer from it. An
-/// out-of-range value therefore crashes the *process* instead of returning an
-/// error: below [`DICT_SIZE_MIN`] the match-finder sizing underflows, and a
-/// value approaching `u32::MAX` overflows the buffer arithmetic / demands a
-/// multi-GiB allocation (OOM/abort). Reject both so the constructor can surface
-/// a clean `InvalidArg` (via [`map_invalid`]).
+/// is infallible and immediately sizes the match-finder from it. An out-of-range
+/// value therefore crashes the *process* instead of returning an error: below
+/// [`DICT_SIZE_MIN`] the match-finder sizing underflows, and a large value
+/// overflows the `bt4` `dict_size as i32 + 1` arithmetic and/or demands a
+/// multi-GiB allocation (OOM/abort). We deliberately reject against our own
+/// [`MAX_DICT_SIZE`] rather than `lzma_rust2`'s exported `DICT_SIZE_MAX`, which
+/// is a decode-only bound that is unsafe for the encoder (see [`MAX_DICT_SIZE`]
+/// for the `bt4` overflow + unbounded-allocation rationale). Reject both ends so
+/// the constructor can surface a clean `InvalidArg` (via [`map_invalid`]).
 ///
 /// Returns the dictionary size unchanged when it is in range.
 pub fn validate_dict_size(dict_size: u32) -> io::Result<u32> {
-  if !(DICT_SIZE_MIN..=DICT_SIZE_MAX).contains(&dict_size) {
+  if !(DICT_SIZE_MIN..=MAX_DICT_SIZE).contains(&dict_size) {
     return Err(io::Error::new(
       io::ErrorKind::InvalidInput,
-      format!("dictSize must be in the range {DICT_SIZE_MIN}..={DICT_SIZE_MAX}, got {dict_size}"),
+      format!("dictSize must be in the range {DICT_SIZE_MIN}..={MAX_DICT_SIZE}, got {dict_size}"),
     ));
   }
   Ok(dict_size)
@@ -409,8 +440,10 @@ mod tests {
     );
   }
 
-  /// `validate_dict_size` accepts exactly `DICT_SIZE_MIN..=DICT_SIZE_MAX` and
-  /// rejects the values that would panic / OOM the infallible `Lzma2Writer`.
+  /// `validate_dict_size` accepts exactly `DICT_SIZE_MIN..=MAX_DICT_SIZE` and
+  /// rejects the values that would panic / OOM the infallible `Lzma2Writer`,
+  /// including `0xfffffff0` (`lzma_rust2`'s decode-only `DICT_SIZE_MAX`), which
+  /// the encoder's `bt4` match-finder cannot survive.
   #[test]
   fn validate_dict_size_boundaries() {
     assert!(validate_dict_size(0).is_err(), "0 (< MIN) must be rejected");
@@ -429,13 +462,17 @@ mod tests {
       "the pinned 8 MiB default must be accepted"
     );
     assert_eq!(
-      validate_dict_size(DICT_SIZE_MAX).unwrap(),
-      DICT_SIZE_MAX,
-      "the maximum dict size must be accepted"
+      validate_dict_size(MAX_DICT_SIZE).unwrap(),
+      MAX_DICT_SIZE,
+      "the encoder-safe maximum dict size must be accepted"
     );
     assert!(
-      validate_dict_size(DICT_SIZE_MAX + 1).is_err(),
-      "DICT_SIZE_MAX + 1 must be rejected"
+      validate_dict_size(MAX_DICT_SIZE + 1).is_err(),
+      "MAX_DICT_SIZE + 1 must be rejected"
+    );
+    assert!(
+      validate_dict_size(0xffff_fff0).is_err(),
+      "0xfffffff0 (lzma_rust2 DICT_SIZE_MAX) would overflow/OOM the encoder and must be rejected"
     );
     assert!(
       validate_dict_size(u32::MAX).is_err(),

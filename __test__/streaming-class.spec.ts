@@ -95,15 +95,39 @@ for (const ns of NAMESPACES) {
   })
 }
 
+// Encoder-safe dictionary cap (mirrors `MAX_DICT_SIZE` in `src/backend.rs`).
+// `lzma_rust2`'s exported `DICT_SIZE_MAX` (0xfffffff0) is a decode-only bound:
+// feeding it to the encoder reaches `Bt4::new`, where `dict_size as i32 + 1`
+// overflows and a `~dict*8` byte allocation OOM/aborts the process. Validation
+// must reject anything above this cap BEFORE any writer is allocated.
+const MAX_DICT_SIZE = 256 << 20
+
 test('lzma2: dictSize 0 (< DICT_SIZE_MIN) throws InvalidArg, does not crash', (t) => {
   const Lzma2Compressor = loadCompressor('lzma2')
   const err = t.throws(() => new Lzma2Compressor({ dictSize: 0 }))
   t.true(isInvalidArg(err), `expected an InvalidArg napi error, got ${String(err)}`)
 })
 
-test('lzma2: oversized dictSize (> DICT_SIZE_MAX) throws InvalidArg, does not OOM/abort', (t) => {
+test('lzma2: below-min dictSize (4095 < DICT_SIZE_MIN) throws InvalidArg', (t) => {
   const Lzma2Compressor = loadCompressor('lzma2')
-  const err = t.throws(() => new Lzma2Compressor({ dictSize: 0xffffffff }))
+  const err = t.throws(() => new Lzma2Compressor({ dictSize: 4095 }))
+  t.true(isInvalidArg(err), `expected an InvalidArg napi error, got ${String(err)}`)
+})
+
+// The critical case: 0xfffffff0 == lzma_rust2's DICT_SIZE_MAX. The OLD validator
+// accepted it (it was in `DICT_SIZE_MIN..=DICT_SIZE_MAX`), so constructing a
+// compressor with it reached `Bt4::new` and ABORTED the whole process. It must
+// now be a clean, in-process, catchable throw — validation rejects it BEFORE any
+// allocation, so this `t.throws` can never take the test runner down.
+test('lzma2: dangerous dictSize 0xfffffff0 throws InvalidArg, does NOT abort the process', (t) => {
+  const Lzma2Compressor = loadCompressor('lzma2')
+  const err = t.throws(() => new Lzma2Compressor({ dictSize: 0xfffffff0 }))
+  t.true(isInvalidArg(err), `expected an InvalidArg napi error, got ${String(err)}`)
+})
+
+test('lzma2: dictSize just above the encoder cap (MAX_DICT_SIZE + 1) throws InvalidArg', (t) => {
+  const Lzma2Compressor = loadCompressor('lzma2')
+  const err = t.throws(() => new Lzma2Compressor({ dictSize: MAX_DICT_SIZE + 1 }))
   t.true(isInvalidArg(err), `expected an InvalidArg napi error, got ${String(err)}`)
 })
 
