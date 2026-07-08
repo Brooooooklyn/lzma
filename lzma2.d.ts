@@ -4,3 +4,5 @@ export const compress: typeof lzma2.compress
 export const compressSync: typeof lzma2.compressSync
 export const decompress: typeof lzma2.decompress
 export const decompressSync: typeof lzma2.decompressSync
+export const compressStream: typeof lzma2.compressStream
+export const decompressStream: typeof lzma2.decompressStream

@@ -196,3 +196,78 @@ webTest('cancellation: cancelling the output reader leaves the runtime healthy',
   t.deepEqual(roundTrip, echo)
   t.deepEqual(rejections, [], 'no unhandled rejection after cancelling the reader')
 })
+
+// ── 6) Thread-leak guard: input-starved cancel must not leak the blocking pool ─
+// The previously-leaking window: cancel the OUTPUT while the worker is INPUT-
+// STARVED (parked in `blocking_recv`, having neither sent nor EOF'd) and the pump
+// is parked in `reader.next()` on a never-settling input. Cancelling WITHOUT ever
+// reading the output means no output pull is issued (the native byte stream's
+// HWM is 0), so the cancel drops `out_rx` immediately — yet a worker parked on
+// the input side only ever learns of a dropped `out_rx` via its NEXT
+// `blocking_send`, which it never makes. Without wiring output-cancel back to the
+// input side, each such cancel leaks one parked `spawn_blocking` worker; looping
+// it past tokio's default 512-thread blocking pool exhausts the pool, so a later
+// `spawn_blocking` (the health-check round-trip) can never run and hangs. With the
+// fix the pump `select!`s the input read against `out_tx.closed()`, so a dropped
+// `out_rx` breaks the pump, drops `in_tx`, and frees the worker — the loop is
+// cheap and the round-trip completes promptly. This is the deterministic RED/GREEN
+// signal: reverting just the `select!` regresses it into a hang.
+
+webTest('cancellation: input-starved output cancel does not leak the blocking pool', async (t) => {
+  const { compressStream, decompressStream } = STREAM.xz
+
+  const rejections: unknown[] = []
+  const onRejection = (reason: unknown) => rejections.push(reason)
+  process.on('unhandledRejection', onRejection)
+  t.teardown(() => process.off('unhandledRejection', onRejection))
+
+  // `pull()` never settles → the transform's input channel is permanently starved,
+  // so the spawn_blocking worker parks in `blocking_recv` (never sends, never EOFs).
+  const stalledInput = (): ReadableStream<Uint8Array> =>
+    new ReadableStream<Uint8Array>({
+      pull: () => new Promise<void>(() => {}),
+    })
+
+  // Exceed the 512-thread default blocking pool so a per-cancel worker leak
+  // provably exhausts it. Alternate compress/decompress so BOTH workers (each of
+  // which parks in `blocking_recv` when input-starved) are exercised.
+  const LEAK_ATTEMPTS = 600
+  for (let i = 0; i < LEAK_ATTEMPTS; i++) {
+    const transform = i % 2 === 0 ? decompressStream : compressStream
+    const reader = transform(stalledInput()).getReader()
+    await reader.cancel() // cancel WITHOUT reading: worker is input-starved, out_rx drops now
+    // Periodically yield so the runtime can drain freed workers (fix path): keeps
+    // the healthy case from transiently approaching the pool cap under release lag.
+    if (i % 50 === 49) {
+      await new Promise((resolve) => setTimeout(resolve, 10))
+    }
+  }
+
+  // Health-check: a fresh, independent round-trip must complete promptly. An
+  // exhausted pool would queue its spawn_blocking forever; the timeout turns that
+  // into a fast, deterministic failure instead of a 2-min ava timeout.
+  const echo = Buffer.from('healthy after 600 input-starved cancels')
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const health = (async () => {
+    const compressed = await collectStream(compressStream(fromChunks([echo])))
+    return collectStream(decompressStream(fromChunks(chunkBySize(compressed, 5))))
+  })()
+  const guard = new Promise<never>((_, reject) => {
+    timer = setTimeout(
+      () =>
+        reject(
+          new Error('runtime starved: health-check round-trip did not complete — blocking pool exhausted by leaked workers'),
+        ),
+      30_000,
+    )
+  })
+  try {
+    const roundTrip = await Promise.race([health, guard])
+    t.deepEqual(roundTrip, echo)
+  } finally {
+    if (timer) {
+      clearTimeout(timer)
+    }
+  }
+  t.deepEqual(rejections, [], 'no unhandled rejection after input-starved cancels')
+})

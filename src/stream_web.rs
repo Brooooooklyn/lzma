@@ -44,15 +44,24 @@
 //!
 //! ## Cancellation / EOF (no hung blocking thread)
 //!
-//! * **Consumer cancels** the output stream → `out_rx` drops → the worker's
-//!   `blocking_send` errors → the worker breaks and returns → `in_rx` drops →
-//!   the pump's `in_tx.send` errors → the pump breaks → the input `Reader`
-//!   drops. No thread is left parked.
+//! * **Consumer cancels** the output stream → `out_rx` drops. Two paths reach the
+//!   worker so it never parks forever: (1) if the worker is mid-send, its
+//!   `blocking_send` errors → it breaks and returns → `in_rx` drops → the pump's
+//!   `in_tx.send` errors → the pump breaks. (2) if the worker is INPUT-STARVED
+//!   (parked in `blocking_recv`) while the pump is parked in `reader.next()` on a
+//!   slow / never-closing input, no send ever happens, so the pump `select!`s the
+//!   input read against `out_tx.closed()`: dropping `out_rx` resolves `closed()`,
+//!   the pump breaks and drops `in_tx`, and the worker's `blocking_recv` returns
+//!   `None` → it finalizes and returns. Either way no `spawn_blocking` thread and
+//!   no pump task is left parked.
 //! * **Normal EOF**: the input ends → the pump drops `in_tx` → the worker's
 //!   `blocking_recv` returns `None` → the worker finishes/flushes the trailer →
 //!   drops `out_tx` → the output stream closes.
 
+use std::future::poll_fn;
 use std::io::{self, Read, Write};
+use std::pin::pin;
+use std::task::Poll;
 
 use lzma_rust2::{Lzma2Writer, LzmaWriter};
 use napi::bindgen_prelude::*;
@@ -292,12 +301,51 @@ where
   let (out_tx, out_rx) = channel::<Chunk>(CHANNEL_CAP);
 
   // Pump: copy the input Reader into the in-channel. Dropping `in_tx` on the way
-  // out (loop end or send failure) is the worker's EOF / shutdown signal.
+  // out (loop end, send failure, or output cancel) is the worker's EOF / shutdown
+  // signal.
+  //
+  // `pump_out` is a CLONE of `out_tx` used ONLY to await `.closed()` — a future
+  // that resolves once the consumer drops `out_rx` (cancels the output stream).
+  // Without it, a cancel that arrives while the worker is input-starved (blocked
+  // in `blocking_recv`) AND the pump is parked in `reader.next()` on a slow /
+  // never-closing input would never wake the worker: `out_rx` being dropped only
+  // reaches the worker on its next `blocking_send`, which it never makes — leaking
+  // one `spawn_blocking` thread (and this pump task) per cancel-while-starved.
+  // `select!`ing the input read against `closed()` ties output cancellation back
+  // to the input side, so the pump stops, drops `in_tx`, and the worker's
+  // `blocking_recv` returns `None` → it finalizes and exits. On NORMAL EOF the
+  // pump dropping `pump_out` early is harmless: the worker still holds the real
+  // `out_tx` and streams its trailer until done (`out_rx` closes only once BOTH
+  // senders drop). Clone BEFORE `out_tx` moves into the worker below.
+  let pump_out = out_tx.clone();
   spawn(async move {
-    while let Some(item) = reader.next().await {
-      let chunk = item.map(|bytes| bytes.to_vec());
-      if in_tx.send(chunk).await.is_err() {
-        break; // worker/consumer gone
+    loop {
+      // Biased manual select over `reader.next()` and `pump_out.closed()`: napi
+      // re-exports tokio as a crate but NOT its `select!` macro, so this is spelled
+      // out with `poll_fn` (no extra dependency, no `unsafe`). `closed()` is polled
+      // FIRST so a dropped `out_rx` (output cancelled) wins over a ready read. The
+      // outer `Option` distinguishes cancel (`None`) from a stream event (`Some`).
+      let mut next = pin!(reader.next());
+      let mut closed = pin!(pump_out.closed());
+      let event = poll_fn(|cx| {
+        if closed.as_mut().poll(cx).is_ready() {
+          return Poll::Ready(None); // output cancelled → stop pumping
+        }
+        match next.as_mut().poll(cx) {
+          Poll::Ready(item) => Poll::Ready(Some(item)),
+          Poll::Pending => Poll::Pending,
+        }
+      })
+      .await;
+      match event {
+        // Output cancelled, or normal EOF (input ended): stop. Dropping `in_tx`
+        // (and `pump_out`) on the way out is the worker's shutdown / EOF signal.
+        None | Some(None) => break,
+        Some(Some(item)) => {
+          if in_tx.send(item.map(|bytes| bytes.to_vec())).await.is_err() {
+            break; // worker/consumer gone
+          }
+        }
       }
     }
   });

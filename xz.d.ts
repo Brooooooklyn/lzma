@@ -4,3 +4,5 @@ export const compress: typeof xz.compress
 export const compressSync: typeof xz.compressSync
 export const decompress: typeof xz.decompress
 export const decompressSync: typeof xz.decompressSync
+export const compressStream: typeof xz.compressStream
+export const decompressStream: typeof xz.decompressStream
