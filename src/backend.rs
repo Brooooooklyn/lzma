@@ -4,8 +4,10 @@
 //! This module is the single source of truth for how each container format is
 //! wired up. The one-shot functions in `lib.rs` use the `*_compress` /
 //! `*_decompress` helpers here, and later tasks (class + streaming layers) are
-//! expected to reuse the low-level constructors (`*_writer` / `*_reader`).
-//! Keep the constructor signatures stable.
+//! expected to reuse the shared writers/readers: [`XzEncoder`] plus the
+//! `*_writer` / `*_reader` constructors. All XZ compression goes through
+//! [`XzEncoder`], which owns the empty-input workaround so no downstream caller
+//! can miss it. Keep these signatures stable.
 
 use std::io::{self, Read, Write};
 
@@ -28,10 +30,10 @@ pub const DEFAULT_PRESET: u32 = 6;
 ///
 /// Workaround for an upstream `lzma_rust2` bug: `XzWriter` only starts a block
 /// from inside `write()`, so for empty input `finish()` finalizes a block that
-/// was never started and emits a malformed stream. We emit the spec-defined
-/// empty stream instead. These bytes are byte-identical to liblzma's default
-/// (`xz`) empty output and are asserted to round-trip through our own reader in
-/// the tests below.
+/// was never started and emits a malformed stream. [`XzEncoder::finish`] emits
+/// these spec-defined bytes instead. They are byte-identical to liblzma's
+/// default (`xz`) empty output and are asserted to round-trip through our own
+/// reader in the tests below.
 const EMPTY_XZ_CRC64: [u8; 32] = [
   0xfd, 0x37, 0x7a, 0x58, 0x5a, 0x00, 0x00, 0x04, 0xe6, 0xd6, 0xb4, 0x46, 0x00, 0x00, 0x00, 0x00,
   0x1c, 0xdf, 0x44, 0x21, 0x1f, 0xb6, 0xf3, 0x7d, 0x01, 0x00, 0x00, 0x00, 0x00, 0x04, 0x59, 0x5a,
@@ -75,14 +77,112 @@ pub fn lzma2_reader<R: Read>(reader: R, dict_size: Option<u32>) -> Lzma2Reader<R
   Lzma2Reader::new(reader, dict_size.unwrap_or(LZMA2_DICT_SIZE), None)
 }
 
-/// XZ encoder (default integrity check = CRC64).
-pub fn xz_writer<W: Write>(writer: W, preset: u32) -> io::Result<XzWriter<W>> {
+/// Raw XZ block writer (default integrity check = CRC64).
+///
+/// Internal building block for [`XzEncoder`]. A bare `XzWriter` mis-encodes
+/// empty input (see [`EMPTY_XZ_CRC64`]), so it is deliberately not exposed:
+/// every compressor surface must go through [`XzEncoder`], which owns the
+/// workaround.
+fn xz_writer<W: Write>(writer: W, preset: u32) -> io::Result<XzWriter<W>> {
   XzWriter::new(writer, XzOptions::with_preset(preset))
 }
 
 /// XZ decoder (allows concatenated `.xz` streams).
 pub fn xz_reader<R: Read>(reader: R) -> io::Result<XzReader<R>> {
   Ok(XzReader::new(reader, true))
+}
+
+/// Backend-owned XZ compressor that encapsulates the empty-input workaround for
+/// every caller (one-shot today; the class and stream layers later).
+///
+/// Upstream `XzWriter` only starts a block from inside `write()`, so driving it
+/// to `finish()` without a non-empty write finalizes a never-started block and
+/// emits a malformed `.xz`. `XzEncoder` fixes this once, in the shared layer, so
+/// no downstream caller can reintroduce the bug:
+///
+/// * It stays in the `Empty` state until the first non-empty write, so stray
+///   `write(b"")` chunks are harmless no-ops (relevant to streaming callers).
+/// * If `finish()` runs while still empty, it emits the canonical
+///   [`EMPTY_XZ_CRC64`] stream instead of driving the broken `XzWriter`.
+///
+/// It is generic over `W: Write`, so the one-shot (`Vec<u8>` sink) and future
+/// streaming sinks use the identical path.
+pub struct XzEncoder<W: Write> {
+  state: XzEncoderState<W>,
+}
+
+// `XzWriter` is much larger than the `Empty` variant, but that only exists on
+// the sink for a single encoder, so the size disparity is not worth boxing.
+#[allow(clippy::large_enum_variant)]
+enum XzEncoderState<W: Write> {
+  /// Nothing written yet; holds the sink and preset for a lazy start.
+  Empty { inner: W, preset: u32 },
+  /// The block was started on the first non-empty write.
+  Started(XzWriter<W>),
+  /// Transient placeholder used only while swapping `Empty` -> `Started`. A
+  /// lingering `Done` means the lazy `XzWriter` construction failed.
+  Done,
+}
+
+impl<W: Write> XzEncoder<W> {
+  /// Create an XZ encoder over `inner` at the given preset (CRC64 check).
+  ///
+  /// No bytes are written to the sink until the first non-empty `write` (or,
+  /// for empty input, until `finish`).
+  pub fn new(inner: W, preset: u32) -> io::Result<Self> {
+    Ok(Self {
+      state: XzEncoderState::Empty { inner, preset },
+    })
+  }
+
+  /// Lazily start the block on first use and return the live writer.
+  fn ensure_started(&mut self) -> io::Result<&mut XzWriter<W>> {
+    if matches!(self.state, XzEncoderState::Empty { .. }) {
+      let XzEncoderState::Empty { inner, preset } =
+        std::mem::replace(&mut self.state, XzEncoderState::Done)
+      else {
+        unreachable!("state is Empty in this branch")
+      };
+      self.state = XzEncoderState::Started(xz_writer(inner, preset)?);
+    }
+    match &mut self.state {
+      XzEncoderState::Started(writer) => Ok(writer),
+      _ => Err(io::Error::other("XzEncoder failed to start a block")),
+    }
+  }
+
+  /// Finish the stream and return the inner sink.
+  ///
+  /// If no non-empty data was ever written, emits [`EMPTY_XZ_CRC64`] rather than
+  /// finalizing the never-started upstream block.
+  pub fn finish(self) -> io::Result<W> {
+    match self.state {
+      XzEncoderState::Empty { mut inner, .. } => {
+        inner.write_all(&EMPTY_XZ_CRC64)?;
+        Ok(inner)
+      }
+      XzEncoderState::Started(writer) => writer.finish(),
+      XzEncoderState::Done => Err(io::Error::other("XzEncoder is in an invalid state")),
+    }
+  }
+}
+
+impl<W: Write> Write for XzEncoder<W> {
+  fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+    if buf.is_empty() {
+      // Never start a block for an empty chunk; keeps stray `write(b"")` safe.
+      return Ok(0);
+    }
+    self.ensure_started()?.write(buf)
+  }
+
+  fn flush(&mut self) -> io::Result<()> {
+    match &mut self.state {
+      XzEncoderState::Started(writer) => writer.flush(),
+      // Nothing has been written yet, so there is nothing to flush.
+      _ => Ok(()),
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -122,16 +222,13 @@ pub fn lzma2_decompress(data: &[u8]) -> io::Result<Vec<u8>> {
 }
 
 /// Compresses `data` into an `.xz` container.
+///
+/// Drives the shared [`XzEncoder`], which handles empty input (the upstream
+/// `XzWriter` empty-block bug) so this path needs no special-casing.
 pub fn xz_compress(data: &[u8]) -> io::Result<Vec<u8>> {
-  if data.is_empty() {
-    // Upstream `XzWriter` mis-encodes empty input; emit the canonical stream.
-    return Ok(EMPTY_XZ_CRC64.to_vec());
-  }
-  let mut output = Vec::new();
-  let mut writer = xz_writer(&mut output, DEFAULT_PRESET)?;
-  writer.write_all(data)?;
-  writer.finish()?;
-  Ok(output)
+  let mut encoder = XzEncoder::new(Vec::new(), DEFAULT_PRESET)?;
+  encoder.write_all(data)?;
+  encoder.finish()
 }
 
 /// Decompresses an `.xz` container.
@@ -194,6 +291,41 @@ mod tests {
   #[test]
   fn xz_empty_round_trips() {
     let compressed = xz_compress(b"").unwrap();
+    assert_eq!(compressed, EMPTY_XZ_CRC64);
+    assert!(xz_decompress(&compressed).unwrap().is_empty());
+  }
+
+  /// Drive the SHARED abstraction directly (not via `xz_compress`): finishing an
+  /// `XzEncoder` that never received a write must emit the canonical empty
+  /// stream (not the malformed output a bare upstream `XzWriter` would produce)
+  /// and decode back to empty. This is the guard for every future compressor
+  /// surface (class / stream), which reuse `XzEncoder` rather than `xz_compress`.
+  #[test]
+  fn xz_encoder_finish_without_write_emits_canonical_empty() {
+    let encoder = XzEncoder::new(Vec::new(), DEFAULT_PRESET).unwrap();
+    let compressed = encoder.finish().unwrap();
+    assert_eq!(
+      compressed, EMPTY_XZ_CRC64,
+      "finishing an unwritten XzEncoder must emit the canonical empty stream"
+    );
+    assert!(
+      xz_decompress(&compressed).unwrap().is_empty(),
+      "the canonical empty stream must decode to empty"
+    );
+  }
+
+  /// A stray `write(b"")` must not start a block; finishing afterwards still
+  /// yields the valid empty stream (relevant to streaming callers that may push
+  /// empty chunks).
+  #[test]
+  fn xz_encoder_empty_write_then_finish_is_valid_empty() {
+    let mut encoder = XzEncoder::new(Vec::new(), DEFAULT_PRESET).unwrap();
+    assert_eq!(
+      encoder.write(b"").unwrap(),
+      0,
+      "empty write must be a no-op"
+    );
+    let compressed = encoder.finish().unwrap();
     assert_eq!(compressed, EMPTY_XZ_CRC64);
     assert!(xz_decompress(&compressed).unwrap().is_empty());
   }
