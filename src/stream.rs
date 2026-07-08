@@ -28,7 +28,7 @@ use lzma_rust2::{Lzma2Writer, LzmaWriter};
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
 
-use crate::backend::{self, DEFAULT_PRESET, XzEncoder, map_io};
+use crate::backend::{self, DEFAULT_PRESET, XzEncoder, map_invalid, map_io};
 
 /// A `Send`, heap-only sink the streaming encoders drain incrementally.
 ///
@@ -107,9 +107,12 @@ pub struct Lzma2CompressorOptions {
 /// Generates a top-level `#[napi]` streaming compressor class.
 ///
 /// `$drain` is the encoder's sink accessor (`inner_mut` for the lzma-rust2
-/// writers, `sink_mut` for [`XzEncoder`]); `$build` constructs the encoder over
-/// a fresh [`SharedSink`] and yields `io::Result<$writer>` so a fallible and an
-/// infallible constructor share one shape.
+/// writers, `sink_mut` for [`XzEncoder`]); `$build` VALIDATES the
+/// user-controlled options, then constructs the encoder over a fresh
+/// [`SharedSink`], yielding a napi `Result<$writer>`. Validation happens inside
+/// `$build` (mapping bad input to `InvalidArg`) so an out-of-range preset / dict
+/// size can NEVER reach the allocating, infallible native writer and panic or
+/// OOM the process — the constructor rejects it first.
 macro_rules! define_compressor {
   (
     doc: $doc:literal,
@@ -130,12 +133,16 @@ macro_rules! define_compressor {
     impl $class {
       /// Create a streaming compressor. `options` is optional; an absent or
       /// empty object uses [`DEFAULT_PRESET`].
+      ///
+      /// The `preset` (and, for LZMA2, `dictSize`) are validated before the
+      /// native encoder is built, so out-of-range input rejects with an
+      /// `InvalidArg` error instead of panicking or OOM-ing the process.
       #[napi(constructor)]
       pub fn new(options: Option<$options>) -> Result<Self> {
         let $opts = options.unwrap_or_default();
-        let inner: io::Result<$writer> = $build;
+        let inner: Result<$writer> = $build;
         Ok(Self {
-          inner: Some(inner.map_err(map_io)?),
+          inner: Some(inner?),
         })
       }
 
@@ -173,7 +180,10 @@ define_compressor! {
   options: CompressorOptions,
   writer: LzmaWriter<SharedSink>,
   drain: inner_mut,
-  build: |opts| backend::lzma_writer(SharedSink::default(), opts.preset.unwrap_or(DEFAULT_PRESET)),
+  build: |opts| {
+    let preset = backend::validate_preset(opts.preset.unwrap_or(DEFAULT_PRESET)).map_err(map_invalid)?;
+    backend::lzma_writer(SharedSink::default(), preset).map_err(map_io)
+  },
 }
 
 define_compressor! {
@@ -182,11 +192,17 @@ define_compressor! {
   options: Lzma2CompressorOptions,
   writer: Lzma2Writer<SharedSink>,
   drain: inner_mut,
-  build: |opts| Ok(backend::lzma2_writer(
-    SharedSink::default(),
-    opts.preset.unwrap_or(DEFAULT_PRESET),
-    opts.dict_size,
-  )),
+  build: |opts| {
+    let preset = backend::validate_preset(opts.preset.unwrap_or(DEFAULT_PRESET)).map_err(map_invalid)?;
+    // `None` keeps the pinned `LZMA2_DICT_SIZE` default (A10); an explicit value
+    // is range-checked so it can never panic/OOM the infallible `Lzma2Writer`.
+    let dict_size = opts
+      .dict_size
+      .map(backend::validate_dict_size)
+      .transpose()
+      .map_err(map_invalid)?;
+    Ok(backend::lzma2_writer(SharedSink::default(), preset, dict_size))
+  },
 }
 
 define_compressor! {
@@ -195,5 +211,8 @@ define_compressor! {
   options: CompressorOptions,
   writer: XzEncoder<SharedSink>,
   drain: sink_mut,
-  build: |opts| XzEncoder::new(SharedSink::default(), opts.preset.unwrap_or(DEFAULT_PRESET)),
+  build: |opts| {
+    let preset = backend::validate_preset(opts.preset.unwrap_or(DEFAULT_PRESET)).map_err(map_invalid)?;
+    XzEncoder::new(SharedSink::default(), preset).map_err(map_io)
+  },
 }

@@ -2,7 +2,7 @@ import { createRequire } from 'node:module'
 
 import test from 'ava'
 
-import { chunkBySize, chunkByByte, driveClassCompress, oneShot, type Namespace } from './helpers'
+import { chunkBySize, chunkByByte, driveClassCompress, loadCompressor, oneShot, type Namespace } from './helpers'
 
 // Bare `require` is undefined under the ESM test loader (@oxc-node); bind one to
 // this file to optionally resolve the native `lzma-native` oracle.
@@ -71,6 +71,50 @@ for (const ns of NAMESPACES) {
   })
 }
 
+// ── Constructor input validation (Fix 1) ─────────────────────────────────────
+// Out-of-range `preset` / `dictSize` must throw a clean napi `InvalidArg` error
+// at construction time — never panic, OOM, or abort the process. A JS caller
+// passing e.g. `{ dictSize: 0 }` (underflow) or a huge value (multi-GiB alloc)
+// used to crash the whole process instead of getting a catchable error.
+
+const isInvalidArg = (err: unknown): boolean => err instanceof Error && (err as { code?: string }).code === 'InvalidArg'
+
+for (const ns of NAMESPACES) {
+  test(`${ns}: out-of-range preset throws InvalidArg (does not crash)`, (t) => {
+    const Compressor = loadCompressor(ns)
+    const err = t.throws(() => new Compressor({ preset: 42 }))
+    t.true(isInvalidArg(err), `expected an InvalidArg napi error, got ${String(err)}`)
+  })
+
+  test(`${ns}: valid presets (1 and 9) construct and round-trip`, async (t) => {
+    for (const preset of [1, 9]) {
+      const compressed = await driveClassCompress(ns, chunkBySize(INPUT, 64), { preset })
+      const restored = await oneShot(ns).decompress(compressed)
+      t.deepEqual(Buffer.from(restored), INPUT, `preset ${preset} must construct and round-trip`)
+    }
+  })
+}
+
+test('lzma2: dictSize 0 (< DICT_SIZE_MIN) throws InvalidArg, does not crash', (t) => {
+  const Lzma2Compressor = loadCompressor('lzma2')
+  const err = t.throws(() => new Lzma2Compressor({ dictSize: 0 }))
+  t.true(isInvalidArg(err), `expected an InvalidArg napi error, got ${String(err)}`)
+})
+
+test('lzma2: oversized dictSize (> DICT_SIZE_MAX) throws InvalidArg, does not OOM/abort', (t) => {
+  const Lzma2Compressor = loadCompressor('lzma2')
+  const err = t.throws(() => new Lzma2Compressor({ dictSize: 0xffffffff }))
+  t.true(isInvalidArg(err), `expected an InvalidArg napi error, got ${String(err)}`)
+})
+
+test('lzma2: valid 8 MiB dictSize constructs and round-trips via one-shot decode', async (t) => {
+  // The one-shot lzma2 decoder is pinned to 8 MiB, so use 8 MiB to keep the
+  // round-trip decodable while still exercising the explicit-dictSize path.
+  const compressed = await driveClassCompress('lzma2', chunkBySize(INPUT, 64), { dictSize: 8 << 20 })
+  const restored = await oneShot('lzma2').decompress(compressed)
+  t.deepEqual(Buffer.from(restored), INPUT)
+})
+
 // ── Strict C-decode: validates the trailer/footer/end-marker is well-formed ──
 // When not WASI and `lzma-native` is present, decode our class output with the C
 // implementation for xz and lzma. Degrade gracefully (skip) otherwise.
@@ -79,6 +123,11 @@ type NativeDecode = (buf: Buffer) => Promise<Buffer>
 
 const nativeStrictDecode: Partial<Record<Namespace, NativeDecode>> = {}
 
+// Only WASI legitimately lacks `lzma-native` (mirrors the per-namespace specs'
+// `NAPI_RS_FORCE_WASI` gate). On a normal platform a load failure is a REAL
+// regression of the trailer/footer gate, so we record it and FAIL below rather
+// than swallowing it into a `t.pass()`.
+let nativeLoadError: unknown
 if (!IS_WASI) {
   try {
     const lzmaNative = requireFrom('lzma-native')
@@ -104,9 +153,10 @@ if (!IS_WASI) {
         })
       })
     }
-  } catch {
-    // `lzma-native` not installed / not buildable on this platform: the strict
-    // legs below self-skip, mirroring the existing per-namespace specs.
+  } catch (err) {
+    // Remember WHY `lzma-native` did not load so the strict-decode legs can fail
+    // loudly on a platform that should have provided it (non-WASI).
+    nativeLoadError = err
   }
 }
 
@@ -114,7 +164,13 @@ for (const ns of ['xz', 'lzma'] as const) {
   test(`${ns}: class output is strictly decodable by lzma-native`, async (t) => {
     const decode = nativeStrictDecode[ns]
     if (!decode) {
-      t.pass(`lzma-native unavailable (${IS_WASI ? 'WASI' : 'not installed'}); skipping strict C-decode`)
+      if (IS_WASI) {
+        t.pass('lzma-native unavailable under WASI; skipping strict C-decode')
+        return
+      }
+      // Non-WASI: `lzma-native` MUST be usable, so a missing decoder is a real
+      // failure of the trailer/footer regression gate, not a skip.
+      t.fail(`lzma-native must load on a non-WASI platform (strict C-decode gate); load failed: ${String(nativeLoadError)}`)
       return
     }
     const compressed = await driveClassCompress(ns, chunkBySize(INPUT, 64))

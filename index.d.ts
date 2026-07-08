@@ -5,6 +5,10 @@ export declare class Lzma2Compressor {
   /**
    * Create a streaming compressor. `options` is optional; an absent or
    * empty object uses [`DEFAULT_PRESET`].
+   *
+   * The `preset` (and, for LZMA2, `dictSize`) are validated before the
+   * native encoder is built, so out-of-range input rejects with an
+   * `InvalidArg` error instead of panicking or OOM-ing the process.
    */
   constructor(options?: Lzma2CompressorOptions | undefined | null)
   /**
@@ -25,6 +29,10 @@ export declare class LzmaCompressor {
   /**
    * Create a streaming compressor. `options` is optional; an absent or
    * empty object uses [`DEFAULT_PRESET`].
+   *
+   * The `preset` (and, for LZMA2, `dictSize`) are validated before the
+   * native encoder is built, so out-of-range input rejects with an
+   * `InvalidArg` error instead of panicking or OOM-ing the process.
    */
   constructor(options?: CompressorOptions | undefined | null)
   /**
@@ -45,6 +53,10 @@ export declare class XzCompressor {
   /**
    * Create a streaming compressor. `options` is optional; an absent or
    * empty object uses [`DEFAULT_PRESET`].
+   *
+   * The `preset` (and, for LZMA2, `dictSize`) are validated before the
+   * native encoder is built, so out-of-range input rejects with an
+   * `InvalidArg` error instead of panicking or OOM-ing the process.
    */
   constructor(options?: CompressorOptions | undefined | null)
   /**

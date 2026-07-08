@@ -12,8 +12,8 @@
 use std::io::{self, Read, Write};
 
 use lzma_rust2::{
-  Lzma2Options, Lzma2Reader, Lzma2Writer, LzmaOptions, LzmaReader, LzmaWriter, XzOptions, XzReader,
-  XzWriter,
+  DICT_SIZE_MAX, DICT_SIZE_MIN, Lzma2Options, Lzma2Reader, Lzma2Writer, LzmaOptions, LzmaReader,
+  LzmaWriter, XzOptions, XzReader, XzWriter,
 };
 
 /// Canonical LZMA2 dictionary size (8 MiB).
@@ -47,6 +47,53 @@ pub fn map_io(err: io::Error) -> napi::Error {
 /// Maps a decode failure to a napi `InvalidArg` error (malformed input bytes).
 pub fn map_invalid(err: io::Error) -> napi::Error {
   napi::Error::new(napi::Status::InvalidArg, err.to_string())
+}
+
+// ---------------------------------------------------------------------------
+// Constructor input validation (single source of truth for every user-facing
+// surface: the one-shot functions never expose these knobs, but the streaming
+// and class layers do, so the checks live here and are reused).
+// ---------------------------------------------------------------------------
+
+/// Validates a compression preset against the range `lzma_rust2` accepts.
+///
+/// The `*Options::set_preset` family silently CLAMPS anything above 9 to 9
+/// (`preset.min(9)`), so an out-of-range preset would not crash but would
+/// quietly encode at a *different* level than the caller asked for. We reject it
+/// instead so the napi surface fails loudly (`InvalidArg` via [`map_invalid`])
+/// rather than misconfiguring the encoder behind the caller's back.
+///
+/// Returns the preset unchanged when it is in `0..=9`.
+pub fn validate_preset(preset: u32) -> io::Result<u32> {
+  if preset > 9 {
+    return Err(io::Error::new(
+      io::ErrorKind::InvalidInput,
+      format!("preset must be in the range 0..=9, got {preset}"),
+    ));
+  }
+  Ok(preset)
+}
+
+/// Validates a raw-LZMA2 dictionary size against `lzma_rust2`'s accepted range
+/// ([`DICT_SIZE_MIN`]`..=`[`DICT_SIZE_MAX`]).
+///
+/// [`lzma2_writer`] feeds `dict_size` straight into [`Lzma2Writer::new`], which
+/// is infallible and immediately sizes an internal buffer from it. An
+/// out-of-range value therefore crashes the *process* instead of returning an
+/// error: below [`DICT_SIZE_MIN`] the match-finder sizing underflows, and a
+/// value approaching `u32::MAX` overflows the buffer arithmetic / demands a
+/// multi-GiB allocation (OOM/abort). Reject both so the constructor can surface
+/// a clean `InvalidArg` (via [`map_invalid`]).
+///
+/// Returns the dictionary size unchanged when it is in range.
+pub fn validate_dict_size(dict_size: u32) -> io::Result<u32> {
+  if !(DICT_SIZE_MIN..=DICT_SIZE_MAX).contains(&dict_size) {
+    return Err(io::Error::new(
+      io::ErrorKind::InvalidInput,
+      format!("dictSize must be in the range {DICT_SIZE_MIN}..={DICT_SIZE_MAX}, got {dict_size}"),
+    ));
+  }
+  Ok(dict_size)
 }
 
 // ---------------------------------------------------------------------------
@@ -345,6 +392,55 @@ mod tests {
     let compressed = encoder.finish().unwrap();
     assert_eq!(compressed, EMPTY_XZ_CRC64);
     assert!(xz_decompress(&compressed).unwrap().is_empty());
+  }
+
+  /// `validate_preset` accepts the full `0..=9` range and rejects everything
+  /// above 9 (the crate would otherwise silently clamp, misconfiguring the
+  /// encoder without telling the caller).
+  #[test]
+  fn validate_preset_boundaries() {
+    for preset in 0..=9 {
+      assert_eq!(validate_preset(preset).unwrap(), preset);
+    }
+    assert!(validate_preset(10).is_err(), "preset 10 must be rejected");
+    assert!(
+      validate_preset(u32::MAX).is_err(),
+      "an absurd preset must be rejected, not clamped"
+    );
+  }
+
+  /// `validate_dict_size` accepts exactly `DICT_SIZE_MIN..=DICT_SIZE_MAX` and
+  /// rejects the values that would panic / OOM the infallible `Lzma2Writer`.
+  #[test]
+  fn validate_dict_size_boundaries() {
+    assert!(validate_dict_size(0).is_err(), "0 (< MIN) must be rejected");
+    assert!(
+      validate_dict_size(DICT_SIZE_MIN - 1).is_err(),
+      "4095 (< MIN) must be rejected"
+    );
+    assert_eq!(
+      validate_dict_size(DICT_SIZE_MIN).unwrap(),
+      DICT_SIZE_MIN,
+      "the minimum dict size must be accepted"
+    );
+    assert_eq!(
+      validate_dict_size(LZMA2_DICT_SIZE).unwrap(),
+      LZMA2_DICT_SIZE,
+      "the pinned 8 MiB default must be accepted"
+    );
+    assert_eq!(
+      validate_dict_size(DICT_SIZE_MAX).unwrap(),
+      DICT_SIZE_MAX,
+      "the maximum dict size must be accepted"
+    );
+    assert!(
+      validate_dict_size(DICT_SIZE_MAX + 1).is_err(),
+      "DICT_SIZE_MAX + 1 must be rejected"
+    );
+    assert!(
+      validate_dict_size(u32::MAX).is_err(),
+      "u32::MAX must be rejected (would OOM/overflow)"
+    );
   }
 
   /// Empty input must round-trip for every format.
