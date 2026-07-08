@@ -1,9 +1,10 @@
+import { randomBytes } from 'node:crypto'
 import { arch } from 'node:os'
 
 import test from 'ava'
 import type { Preset } from 'lzma-native'
 
-import { compress, decompress } from '../xz'
+import { compress, compressSync, decompress, decompressSync } from '../xz'
 
 let decompressNative: typeof import('lzma-native').decompress
 let compressNative: typeof import('lzma-native').compress
@@ -43,5 +44,56 @@ for (const mode of Array.from({ length: arch() === 'ia32' ? 7 : 10 }).map((_, i)
     })
 
     t.is(await (await decompress(compressed)).toString('utf8'), STRING_FIXTURE)
+  })
+}
+
+// Deterministic low-entropy data (16-symbol alphabet) with variation.
+const lowEntropy = (size: number): Buffer => {
+  const buf = Buffer.allocUnsafe(size)
+  for (let i = 0; i < size; i++) {
+    buf[i] = (Math.imul(i, 2654435761) >>> 24) & 0x0f
+  }
+  return buf
+}
+
+const nativeDecompress = (buf: Buffer): Promise<Buffer> =>
+  new Promise((resolve) => {
+    ;(process.env.NAPI_RS_FORCE_WASI ? decompressPolyfill : decompressNative)(buf, 6, (o) => resolve(o))
+  })
+
+const nativeCompress = (buf: Buffer): Promise<Buffer> =>
+  new Promise((resolve) => {
+    compressNative(buf, 6 as Preset, (o) => resolve(o))
+  })
+
+const FIXTURES: Array<{ name: string; data: Buffer }> = [
+  { name: 'empty input', data: Buffer.alloc(0) },
+  { name: '>2MB low-entropy', data: lowEntropy(2 * 1024 * 1024 + 7) },
+  { name: '>8MB low-entropy', data: lowEntropy(8 * 1024 * 1024 + 7) },
+  { name: '>2MB incompressible random', data: randomBytes(2 * 1024 * 1024 + 7) },
+  { name: 'highly repetitive', data: Buffer.alloc(3 * 1024 * 1024 + 5, 0x61) },
+]
+
+for (const { name, data } of FIXTURES) {
+  test(`xz async round-trip: ${name}`, async (t) => {
+    const output = await decompress(await compress(data))
+    t.deepEqual(Buffer.from(output), data)
+  })
+
+  test(`xz sync round-trip: ${name}`, (t) => {
+    const output = decompressSync(compressSync(data))
+    t.deepEqual(Buffer.from(output), data)
+  })
+
+  // our compress -> lzma-native decompress (self round-trip when lzma-native is absent)
+  test(`xz cross-compat, ours -> native: ${name}`, async (t) => {
+    const output = await nativeDecompress(await compress(data))
+    t.deepEqual(Buffer.from(output), data)
+  })
+
+  // lzma-native compress -> our decompress (self round-trip when lzma-native is absent)
+  test(`xz cross-compat, native -> ours: ${name}`, async (t) => {
+    const output = await decompress(await nativeCompress(data))
+    t.deepEqual(Buffer.from(output), data)
   })
 }

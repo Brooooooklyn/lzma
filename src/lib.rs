@@ -1,5 +1,7 @@
 #![deny(clippy::all)]
 
+mod backend;
+
 #[cfg(all(
   not(target_arch = "x86"),
   not(target_arch = "arm"),
@@ -21,10 +23,7 @@ macro_rules! define_functions {
       type JsValue = BufferSlice<'task>;
 
       fn compute(&mut self) -> Result<Self::Output> {
-        let mut data_ref = self.0.as_ref();
-        let mut output = Vec::new();
-        lzma_rs::$compress_algorithm(&mut data_ref, &mut output)?;
-        Ok(output)
+        crate::backend::$compress_algorithm(self.0.as_ref()).map_err(crate::backend::map_io)
       }
 
       fn resolve(&mut self, env: &'task Env, output: Self::Output) -> Result<Self::JsValue> {
@@ -49,8 +48,8 @@ macro_rules! define_functions {
 
     #[napi_derive::napi(namespace = $namespace)]
     pub fn compress_sync(input: Either<String, Uint8Array>) -> Result<Buffer> {
-      let mut output = Vec::with_capacity(input.as_ref().len());
-      lzma_rs::$compress_algorithm(&mut input.as_ref(), &mut output)?;
+      let output =
+        crate::backend::$compress_algorithm(input.as_ref()).map_err(crate::backend::map_io)?;
       Ok(output.into())
     }
 
@@ -63,11 +62,7 @@ macro_rules! define_functions {
       type JsValue = BufferSlice<'task>;
 
       fn compute(&mut self) -> Result<Self::Output> {
-        let mut data_ref = self.0.as_ref();
-        let mut output = Vec::new();
-        lzma_rs::$decompress_algorithm(&mut data_ref, &mut output)
-          .map_err(|err| napi::Error::new(napi::Status::InvalidArg, format!("{}", err)))?;
-        Ok(output)
+        crate::backend::$decompress_algorithm(self.0.as_ref()).map_err(crate::backend::map_invalid)
       }
 
       fn resolve(&mut self, env: &'task Env, output: Self::Output) -> Result<Self::JsValue> {
@@ -89,10 +84,9 @@ macro_rules! define_functions {
     }
 
     #[napi_derive::napi(namespace = $namespace)]
-    pub fn decompress_sync(mut input: &[u8]) -> Result<Buffer> {
-      let mut output = Vec::with_capacity(input.len());
-      lzma_rs::$decompress_algorithm(&mut input, &mut output)
-        .map_err(|err| napi::Error::new(napi::Status::InvalidArg, format!("{}", err)))?;
+    pub fn decompress_sync(input: &[u8]) -> Result<Buffer> {
+      let output =
+        crate::backend::$decompress_algorithm(input).map_err(crate::backend::map_invalid)?;
       Ok(output.into())
     }
   };
