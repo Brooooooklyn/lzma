@@ -48,11 +48,15 @@
     "main.js",
     "xz.js",
     "xz.d.ts",
+    "xz.browser.js",
     "lzma.js",
     "lzma.d.ts",
+    "lzma.browser.js",
     "lzma2.js",
     "lzma2.d.ts",
+    "lzma2.browser.js",
     "stream-polyfill.js",
+    "stream-polyfill.mjs",
     "browser-entry.js"
   ],
   "devDependencies": {
@@ -113,33 +117,36 @@
   },
   "browser": {
     "index.js": "./browser-entry.js",
-    "main.js": "./browser-entry.js"
+    "main.js": "./browser-entry.js",
+    "xz.js": "./xz.browser.js",
+    "lzma.js": "./lzma.browser.js",
+    "lzma2.js": "./lzma2.browser.js"
   },
   "exports": {
     ".": {
       "types": "./index.d.ts",
-      "browser": {
-        "import": "./browser-entry.js"
-      },
+      "browser": "./browser-entry.js",
       "import": "./main.js",
       "require": "./main.js"
     },
     "./xz": {
       "types": "./xz.d.ts",
+      "browser": "./xz.browser.js",
       "import": "./xz.js",
       "require": "./xz.js"
     },
     "./lzma": {
       "types": "./lzma.d.ts",
+      "browser": "./lzma.browser.js",
       "import": "./lzma.js",
       "require": "./lzma.js"
     },
     "./lzma2": {
       "types": "./lzma2.d.ts",
+      "browser": "./lzma2.browser.js",
       "import": "./lzma2.js",
       "require": "./lzma2.js"
-    },
-    "./stream-polyfill": "./stream-polyfill.js"
+    }
   },
   "packageManager": "yarn@4.17.0",
   "funding": {

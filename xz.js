@@ -1,5 +1,8 @@
 const { xz, XzCompressor, XzDecompressor } = require('./index')
-const { createStreamApi, createNodeStreamFactories } = require('./stream-polyfill')
+// Pure streaming logic from the single-source ESM module (Node `require(esm)`);
+// the Node-only Duplex factory from its CJS sibling.
+const { createStreamApi } = require('./stream-polyfill.mjs')
+const { createNodeStreamFactories } = require('./stream-polyfill.js')
 
 module.exports.compress = xz.compress
 module.exports.compressSync = xz.compressSync

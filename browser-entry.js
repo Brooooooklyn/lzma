@@ -12,7 +12,7 @@
 // `honestNamespaces`), and re-exports the streaming classes unchanged.
 
 import * as binding from '@napi-rs/lzma-wasm32-wasi'
-import { honestNamespaces } from './stream-polyfill.js'
+import { honestNamespaces } from './stream-polyfill.mjs'
 
 const { lzma, lzma2, xz } = honestNamespaces(binding)
 

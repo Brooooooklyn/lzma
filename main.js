@@ -16,7 +16,10 @@
 'use strict'
 
 const binding = require('./index.js')
-const { honestNamespaces } = require('./stream-polyfill.js')
+// The pure streaming logic is single-sourced in the browser-safe ESM module
+// `stream-polyfill.mjs`; Node consumes it via `require(esm)` (stable since Node
+// 22.12, guaranteed by the package `engines`).
+const { honestNamespaces } = require('./stream-polyfill.mjs')
 
 const { lzma, lzma2, xz } = honestNamespaces(binding)
 
