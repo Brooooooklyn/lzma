@@ -135,7 +135,7 @@
     "./xz": {
       "browser": {
         "types": "./xz.browser.d.ts",
-        "import": "./xz.browser.js"
+        "default": "./xz.browser.js"
       },
       "types": "./xz.d.ts",
       "import": "./xz.js",
@@ -144,7 +144,7 @@
     "./lzma": {
       "browser": {
         "types": "./lzma.browser.d.ts",
-        "import": "./lzma.browser.js"
+        "default": "./lzma.browser.js"
       },
       "types": "./lzma.d.ts",
       "import": "./lzma.js",
@@ -153,7 +153,7 @@
     "./lzma2": {
       "browser": {
         "types": "./lzma2.browser.d.ts",
-        "import": "./lzma2.browser.js"
+        "default": "./lzma2.browser.js"
       },
       "types": "./lzma2.d.ts",
       "import": "./lzma2.js",

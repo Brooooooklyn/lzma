@@ -1,23 +1,56 @@
 // Browser-condition type declarations for the `@napi-rs/lzma/xz` subpath.
 //
-// The `browser` export condition maps to `xz.browser.js`, the hand-written wasm
-// wrapper, which intentionally does NOT export the Node-only `createCompressStream`
-// / `createDecompressStream` Duplex factories (they need `node:stream`, which does
-// not exist in the browser). These declarations therefore mirror the browser
-// wrapper's ACTUAL exports EXACTLY — the one-shot fns, the Web-Streams
-// `compressStream` / `decompressStream`, and the streaming classes — and reference
-// NOTHING from `node:stream`. The Node/default condition keeps the full `xz.d.ts`
-// (which additionally declares the Duplex factories). Types are taken from
-// `./index` (the universal surface), so nothing here pulls in `node:stream`.
+// HAND-AUTHORED to mirror the Uint8Array browser runtime in `xz.browser.js`
+// EXACTLY: every chunk / stream / return value is a plain `Uint8Array`, never a
+// Node `Buffer`. They are intentionally SELF-CONTAINED — no `import … from
+// './index'`, no `typeof`, no `Buffer`, no `node:*` — so a DOM-only TS consumer
+// (`lib: ["dom","esnext"]`, no `@types/node`) never hits `Cannot find name
+// 'Buffer'`. This is a distinct surface from the Node `Buffer` types in
+// `xz.d.ts` (which the Node/default condition keeps, together with the
+// `node:stream` Duplex factories `createCompressStream` / `createDecompressStream`).
+// The browser wrapper omits those factories, so they are absent here too.
 
-import { xz } from './index'
+/** Options for the `.xz` streaming compressor. */
+export interface CompressorOptions {
+  /** Compression preset `0..=9` (default 6). Higher = smaller output, slower. */
+  preset?: number
+}
 
-export const compress: typeof xz.compress
-export const compressSync: typeof xz.compressSync
-export const decompress: typeof xz.decompress
-export const decompressSync: typeof xz.decompressSync
-export const compressStream: typeof xz.compressStream
-export const decompressStream: typeof xz.decompressStream
+export function compress(input: string | Uint8Array, signal?: AbortSignal | null): Promise<Uint8Array>
+export function compressSync(input: string | Uint8Array): Uint8Array
+export function decompress(input: Uint8Array, signal?: AbortSignal | null): Promise<Uint8Array>
+export function decompressSync(input: Uint8Array): Uint8Array
 
-// Streaming classes, re-exported under the namespace-local names.
-export { XzCompressor as Compressor, XzDecompressor as Decompressor } from './index'
+/**
+ * Compress a `ReadableStream<Uint8Array>` into an `.xz` byte stream (Web Streams
+ * in / out — the browser-native way to stream).
+ */
+export function compressStream(
+  input: ReadableStream<Uint8Array>,
+  options?: CompressorOptions | null,
+): ReadableStream<Uint8Array>
+/** Decompress an `.xz` `ReadableStream<Uint8Array>` into a plaintext stream. */
+export function decompressStream(input: ReadableStream<Uint8Array>): ReadableStream<Uint8Array>
+
+/** Incremental `.xz` compressor (Web/browser surface: Uint8Array in / out). */
+export declare class Compressor {
+  constructor(options?: CompressorOptions | null)
+  /**
+   * Feed one chunk. A `string` is UTF-8 encoded (matching the one-shot
+   * `compress` convention); a `Uint8Array` is fed verbatim. Returns the bytes
+   * produced so far (possibly empty); only the concatenation of every `update()`
+   * plus `finish()` is a valid stream.
+   */
+  update(chunk: string | Uint8Array): Uint8Array
+  /** Flush the encoder and resolve to the format trailer. */
+  finish(): Promise<Uint8Array>
+}
+
+/** Incremental `.xz` decompressor (Web/browser surface: Uint8Array in / out). */
+export declare class Decompressor {
+  constructor()
+  /** Feed one compressed chunk; returns the bytes decoded so far (possibly empty). */
+  update(chunk: Uint8Array): Uint8Array
+  /** Signal EOF and resolve to the decoded tail. */
+  finish(): Promise<Uint8Array>
+}
