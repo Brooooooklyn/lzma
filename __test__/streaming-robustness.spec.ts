@@ -29,6 +29,8 @@
  * marks the unimplemented reclamation so it never reads as a false GREEN. See
  * `.superpowers/sdd/task-6-report.md`.
  */
+import { createRequire } from 'node:module'
+
 import test from 'ava'
 
 import * as lzmaStream from '../lzma'
@@ -58,8 +60,13 @@ const INPUT = Buffer.from('T6 robustness 🚀 payload — Ünïcöde '.repeat(40
 const classTest = IS_WASI && !SUPPORTS_STREAMING_WASI ? test.skip : test
 
 // The web transforms exist only on a native build (compiled out on wasm). Gate on
-// the raw binding fn, exactly like `streaming-web.spec.ts`.
-const NATIVE_STREAM = typeof (xzStream as { compressStream?: unknown }).compressStream === 'function'
+// the RAW binding fn, exactly like `streaming-web.spec.ts` — NOT the `../xz` subpath,
+// whose `compressStream` is present even on wasm as a buffered polyfill (gating on
+// it would run the polyfill under WASI instead of registering an honest skip).
+// Bare `require` is undefined under the ESM test loader (@oxc-node); bind one here.
+const requireFrom = createRequire(import.meta.url)
+const binding = requireFrom('../index.js') as { xz?: { compressStream?: unknown } }
+const NATIVE_STREAM = typeof binding.xz?.compressStream === 'function'
 const webTest = NATIVE_STREAM ? test : test.skip
 
 type StreamFn = (input: ReadableStream<Uint8Array>, options?: unknown) => ReadableStream<Uint8Array>

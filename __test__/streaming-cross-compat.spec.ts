@@ -22,6 +22,8 @@
  * s390x / ppc64le / riscv64 / armv7 / aarch64-musl legs ship no prebuild), so each
  * leg registers as a genuine ava SKIP — never a silent pass, never a hard failure.
  */
+import { createRequire } from 'node:module'
+
 import test from 'ava'
 
 import * as lzmaStream from '../lzma'
@@ -43,8 +45,14 @@ const C_FORMATS = ['xz', 'lzma'] as const
 type CFormat = (typeof C_FORMATS)[number]
 
 const oracle: LzmaNativeOracle | null = loadLzmaNative()
-// Native web transforms exist only on a native build (compiled out on wasm).
-const NATIVE_STREAM = typeof (xzStream as { compressStream?: unknown }).compressStream === 'function'
+// Native web transforms exist only on a native build (compiled out on wasm). Gate on
+// the RAW binding fn, exactly like `streaming-web.spec.ts` — NOT the `../xz` subpath,
+// whose `compressStream` is present even on wasm as a buffered polyfill (gating on
+// it would run the polyfill under WASI instead of registering an honest skip).
+// Bare `require` is undefined under the ESM test loader (@oxc-node); bind one here.
+const requireFrom = createRequire(import.meta.url)
+const binding = requireFrom('../index.js') as { xz?: { compressStream?: unknown } }
+const NATIVE_STREAM = typeof binding.xz?.compressStream === 'function'
 
 // `lzma-native` present → run; absent (WASI / prebuild-less arch) → honest SKIP.
 const cTest = oracle ? test : test.skip
