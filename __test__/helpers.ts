@@ -315,8 +315,8 @@ export const deterministicBytes = (size: number, seed = 0x9e3779b9): Buffer => {
 
 /** Split a buffer into fixed `size`-byte chunks (the final chunk may be shorter). */
 export const chunkBySize = (buf: Buffer, size: number): Buffer[] => {
-  if (size < 1) {
-    throw new Error(`chunk size must be >= 1, got ${size}`)
+  if (!Number.isInteger(size) || size < 1) {
+    throw new Error(`chunk size must be an integer >= 1, got ${size}`)
   }
   const chunks: Buffer[] = []
   for (let offset = 0; offset < buf.length; offset += size) {
@@ -374,8 +374,8 @@ export const collectStream = async (stream: ReadableStream<Uint8Array>): Promise
  * boundaries never line up with internal block / dictionary sizes.
  */
 export const awkwardChunks = (buf: Buffer, pattern: readonly number[] = [1, 2, 3, 5, 7, 11, 13]): Buffer[] => {
-  if (pattern.length === 0 || pattern.some((n) => n < 1)) {
-    throw new Error('awkward chunk pattern must be non-empty with every size >= 1')
+  if (pattern.length === 0 || pattern.some((n) => !Number.isInteger(n) || n < 1)) {
+    throw new Error('awkward chunk pattern must be non-empty with every size an integer >= 1')
   }
   const chunks: Buffer[] = []
   let offset = 0

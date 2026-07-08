@@ -1,7 +1,7 @@
 {
   "name": "@napi-rs/lzma",
   "version": "1.4.5",
-  "description": "https://docs.rs/lzma-rs binding to Node.js via https://napi.rs",
+  "description": "lzma / lzma2 / xz compression for Node.js and the browser, backed by pure-Rust lzma-rust2 via https://napi.rs",
   "napi": {
     "binaryName": "lzma",
     "targets": [
@@ -60,7 +60,8 @@
     "lzma2.browser.d.ts",
     "stream-polyfill.js",
     "stream-polyfill.mjs",
-    "browser-entry.js"
+    "browser-entry.js",
+    "browser-entry.d.ts"
   ],
   "devDependencies": {
     "@emnapi/core": "^1.10.0",
@@ -127,8 +128,11 @@
   },
   "exports": {
     ".": {
+      "browser": {
+        "types": "./browser-entry.d.ts",
+        "default": "./browser-entry.js"
+      },
       "types": "./index.d.ts",
-      "browser": "./browser-entry.js",
       "import": "./main.js",
       "require": "./main.js"
     },
