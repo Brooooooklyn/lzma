@@ -392,7 +392,10 @@ pub mod lzma {
   use crate::backend;
   use crate::stream::CompressorOptions;
 
-  /// Compress a `ReadableStream<Uint8Array>` into a `.lzma` byte stream.
+  /// Compress a `ReadableStream<Uint8Array>` into a `.lzma` byte stream. `input`
+  /// must be a WHATWG `ReadableStream`; wrap a Node `Readable` with
+  /// `Readable.toWeb()`, or use the `createCompressStream()` factory from the
+  /// `@napi-rs/lzma/lzma` subpath for a ready-to-pipe Node `Duplex`.
   #[napi(namespace = "lzma")]
   pub fn compress_stream<'env>(
     env: &'env Env,
@@ -408,6 +411,9 @@ pub mod lzma {
   }
 
   /// Decompress a `.lzma` `ReadableStream<Uint8Array>` into a plaintext stream.
+  /// `input` must be a WHATWG `ReadableStream`; wrap a Node `Readable` with
+  /// `Readable.toWeb()`, or use the `createDecompressStream()` factory from the
+  /// `@napi-rs/lzma/lzma` subpath for a ready-to-pipe Node `Duplex`.
   #[napi(namespace = "lzma")]
   pub fn decompress_stream<'env>(
     env: &'env Env,
@@ -429,6 +435,9 @@ pub mod lzma2 {
   use crate::stream::{Lzma2CompressorOptions, Lzma2DecompressorOptions};
 
   /// Compress a `ReadableStream<Uint8Array>` into a raw LZMA2 byte stream.
+  /// `input` must be a WHATWG `ReadableStream`; wrap a Node `Readable` with
+  /// `Readable.toWeb()`, or use the `createCompressStream()` factory from the
+  /// `@napi-rs/lzma/lzma2` subpath for a ready-to-pipe Node `Duplex`.
   #[napi(namespace = "lzma2")]
   pub fn compress_stream<'env>(
     env: &'env Env,
@@ -446,6 +455,9 @@ pub mod lzma2 {
   }
 
   /// Decompress a raw LZMA2 `ReadableStream<Uint8Array>` into a plaintext stream.
+  /// `input` must be a WHATWG `ReadableStream`; wrap a Node `Readable` with
+  /// `Readable.toWeb()`, or use the `createDecompressStream()` factory from the
+  /// `@napi-rs/lzma/lzma2` subpath for a ready-to-pipe Node `Duplex`.
   #[napi(namespace = "lzma2")]
   pub fn decompress_stream<'env>(
     env: &'env Env,
@@ -470,7 +482,10 @@ pub mod xz {
   use crate::backend::{self, XzEncoder};
   use crate::stream::CompressorOptions;
 
-  /// Compress a `ReadableStream<Uint8Array>` into an `.xz` byte stream.
+  /// Compress a `ReadableStream<Uint8Array>` into an `.xz` byte stream. `input`
+  /// must be a WHATWG `ReadableStream`; wrap a Node `Readable` with
+  /// `Readable.toWeb()`, or use the `createCompressStream()` factory from the
+  /// `@napi-rs/lzma/xz` subpath for a ready-to-pipe Node `Duplex`.
   #[napi(namespace = "xz")]
   pub fn compress_stream<'env>(
     env: &'env Env,
@@ -484,6 +499,9 @@ pub mod xz {
   }
 
   /// Decompress an `.xz` `ReadableStream<Uint8Array>` into a plaintext stream.
+  /// `input` must be a WHATWG `ReadableStream`; wrap a Node `Readable` with
+  /// `Readable.toWeb()`, or use the `createDecompressStream()` factory from the
+  /// `@napi-rs/lzma/xz` subpath for a ready-to-pipe Node `Duplex`.
   #[napi(namespace = "xz")]
   pub fn decompress_stream<'env>(
     env: &'env Env,

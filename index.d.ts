@@ -12,11 +12,13 @@ export declare class Lzma2Compressor {
    */
   constructor(options?: Lzma2CompressorOptions | undefined | null)
   /**
-   * Feed one chunk. Returns the bytes produced so far (possibly empty) as a
-   * zero-copy view; only the concatenation of every `update()` + `finish()`
-   * is a valid stream. Never flushes the encoder (byte-identity invariant).
+   * Feed one chunk. A `string` is UTF-8 encoded (matching the one-shot
+   * `compress` convention); a `Uint8Array` is fed verbatim. Returns the
+   * bytes produced so far (possibly empty) as a zero-copy view; only the
+   * concatenation of every `update()` + `finish()` is a valid stream. Never
+   * flushes the encoder (byte-identity invariant).
    */
-  update(chunk: Uint8Array): Buffer
+  update(chunk: string | Uint8Array): Buffer
   /**
    * Flush the encoder and emit the format trailer off the JS thread.
    * Resolves to the tail bytes. Idempotency-guarded: a second call rejects.
@@ -54,11 +56,13 @@ export declare class LzmaCompressor {
    */
   constructor(options?: CompressorOptions | undefined | null)
   /**
-   * Feed one chunk. Returns the bytes produced so far (possibly empty) as a
-   * zero-copy view; only the concatenation of every `update()` + `finish()`
-   * is a valid stream. Never flushes the encoder (byte-identity invariant).
+   * Feed one chunk. A `string` is UTF-8 encoded (matching the one-shot
+   * `compress` convention); a `Uint8Array` is fed verbatim. Returns the
+   * bytes produced so far (possibly empty) as a zero-copy view; only the
+   * concatenation of every `update()` + `finish()` is a valid stream. Never
+   * flushes the encoder (byte-identity invariant).
    */
-  update(chunk: Uint8Array): Buffer
+  update(chunk: string | Uint8Array): Buffer
   /**
    * Flush the encoder and emit the format trailer off the JS thread.
    * Resolves to the tail bytes. Idempotency-guarded: a second call rejects.
@@ -96,11 +100,13 @@ export declare class XzCompressor {
    */
   constructor(options?: CompressorOptions | undefined | null)
   /**
-   * Feed one chunk. Returns the bytes produced so far (possibly empty) as a
-   * zero-copy view; only the concatenation of every `update()` + `finish()`
-   * is a valid stream. Never flushes the encoder (byte-identity invariant).
+   * Feed one chunk. A `string` is UTF-8 encoded (matching the one-shot
+   * `compress` convention); a `Uint8Array` is fed verbatim. Returns the
+   * bytes produced so far (possibly empty) as a zero-copy view; only the
+   * concatenation of every `update()` + `finish()` is a valid stream. Never
+   * flushes the encoder (byte-identity invariant).
    */
-  update(chunk: Uint8Array): Buffer
+  update(chunk: string | Uint8Array): Buffer
   /**
    * Flush the encoder and emit the format trailer off the JS thread.
    * Resolves to the tail bytes. Idempotency-guarded: a second call rejects.
@@ -157,33 +163,63 @@ export interface Lzma2DecompressorOptions {
 
 export declare namespace lzma {
   export function compress(input: string | Uint8Array, signal?: AbortSignal | undefined | null): Promise<Buffer>
-  /** Compress a `ReadableStream<Uint8Array>` into a `.lzma` byte stream. */
+  /**
+   * Compress a `ReadableStream<Uint8Array>` into a `.lzma` byte stream. `input`
+   * must be a WHATWG `ReadableStream`; wrap a Node `Readable` with
+   * `Readable.toWeb()`, or use the `createCompressStream()` factory from the
+   * `@napi-rs/lzma/lzma` subpath for a ready-to-pipe Node `Duplex`.
+   */
   export function compressStream(input: ReadableStream<Uint8Array>, options?: CompressorOptions | undefined | null): ReadableStream<Buffer>
   export function compressSync(input: string | Uint8Array): Buffer
   export function decompress(input: Uint8Array, signal?: AbortSignal | undefined | null): Promise<Buffer>
-  /** Decompress a `.lzma` `ReadableStream<Uint8Array>` into a plaintext stream. */
+  /**
+   * Decompress a `.lzma` `ReadableStream<Uint8Array>` into a plaintext stream.
+   * `input` must be a WHATWG `ReadableStream`; wrap a Node `Readable` with
+   * `Readable.toWeb()`, or use the `createDecompressStream()` factory from the
+   * `@napi-rs/lzma/lzma` subpath for a ready-to-pipe Node `Duplex`.
+   */
   export function decompressStream(input: ReadableStream<Uint8Array>): ReadableStream<Buffer>
   export function decompressSync(input: Uint8Array): Buffer
 }
 
 export declare namespace lzma2 {
   export function compress(input: string | Uint8Array, signal?: AbortSignal | undefined | null): Promise<Buffer>
-  /** Compress a `ReadableStream<Uint8Array>` into a raw LZMA2 byte stream. */
+  /**
+   * Compress a `ReadableStream<Uint8Array>` into a raw LZMA2 byte stream.
+   * `input` must be a WHATWG `ReadableStream`; wrap a Node `Readable` with
+   * `Readable.toWeb()`, or use the `createCompressStream()` factory from the
+   * `@napi-rs/lzma/lzma2` subpath for a ready-to-pipe Node `Duplex`.
+   */
   export function compressStream(input: ReadableStream<Uint8Array>, options?: Lzma2CompressorOptions | undefined | null): ReadableStream<Buffer>
   export function compressSync(input: string | Uint8Array): Buffer
   export function decompress(input: Uint8Array, signal?: AbortSignal | undefined | null): Promise<Buffer>
-  /** Decompress a raw LZMA2 `ReadableStream<Uint8Array>` into a plaintext stream. */
+  /**
+   * Decompress a raw LZMA2 `ReadableStream<Uint8Array>` into a plaintext stream.
+   * `input` must be a WHATWG `ReadableStream`; wrap a Node `Readable` with
+   * `Readable.toWeb()`, or use the `createDecompressStream()` factory from the
+   * `@napi-rs/lzma/lzma2` subpath for a ready-to-pipe Node `Duplex`.
+   */
   export function decompressStream(input: ReadableStream<Uint8Array>, options?: Lzma2DecompressorOptions | undefined | null): ReadableStream<Buffer>
   export function decompressSync(input: Uint8Array): Buffer
 }
 
 export declare namespace xz {
   export function compress(input: string | Uint8Array, signal?: AbortSignal | undefined | null): Promise<Buffer>
-  /** Compress a `ReadableStream<Uint8Array>` into an `.xz` byte stream. */
+  /**
+   * Compress a `ReadableStream<Uint8Array>` into an `.xz` byte stream. `input`
+   * must be a WHATWG `ReadableStream`; wrap a Node `Readable` with
+   * `Readable.toWeb()`, or use the `createCompressStream()` factory from the
+   * `@napi-rs/lzma/xz` subpath for a ready-to-pipe Node `Duplex`.
+   */
   export function compressStream(input: ReadableStream<Uint8Array>, options?: CompressorOptions | undefined | null): ReadableStream<Buffer>
   export function compressSync(input: string | Uint8Array): Buffer
   export function decompress(input: Uint8Array, signal?: AbortSignal | undefined | null): Promise<Buffer>
-  /** Decompress an `.xz` `ReadableStream<Uint8Array>` into a plaintext stream. */
+  /**
+   * Decompress an `.xz` `ReadableStream<Uint8Array>` into a plaintext stream.
+   * `input` must be a WHATWG `ReadableStream`; wrap a Node `Readable` with
+   * `Readable.toWeb()`, or use the `createDecompressStream()` factory from the
+   * `@napi-rs/lzma/xz` subpath for a ready-to-pipe Node `Duplex`.
+   */
   export function decompressStream(input: ReadableStream<Uint8Array>): ReadableStream<Buffer>
   export function decompressSync(input: Uint8Array): Buffer
 }

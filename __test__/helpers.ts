@@ -100,10 +100,11 @@ export const oneShot = (ns: Namespace): OneShot => ONE_SHOT[ns]
 /**
  * Minimal runtime shape of a streaming `Compressor` instance (T2). `update()`
  * is synchronous (returns the bytes produced so far, possibly empty); `finish()`
- * resolves to the format trailer / tail bytes.
+ * resolves to the format trailer / tail bytes. `update()` accepts a `string`
+ * (UTF-8 encoded, T5) or a `Uint8Array`, matching the one-shot `compress` API.
  */
 export interface CompressorInstance {
-  update(chunk: Uint8Array): Buffer
+  update(chunk: string | Uint8Array): Buffer
   finish(): Promise<Buffer>
 }
 
@@ -118,7 +119,7 @@ export interface CompressorInstance {
  */
 export const driveClassCompress = async (
   ns: Namespace,
-  chunks: readonly Uint8Array[],
+  chunks: readonly (string | Uint8Array)[],
   options?: unknown,
 ): Promise<Buffer> => {
   const Compressor = loadCompressor<CompressorInstance>(ns)

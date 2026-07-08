@@ -148,17 +148,25 @@ macro_rules! define_compressor {
         })
       }
 
-      /// Feed one chunk. Returns the bytes produced so far (possibly empty) as a
-      /// zero-copy view; only the concatenation of every `update()` + `finish()`
-      /// is a valid stream. Never flushes the encoder (byte-identity invariant).
+      /// Feed one chunk. A `string` is UTF-8 encoded (matching the one-shot
+      /// `compress` convention); a `Uint8Array` is fed verbatim. Returns the
+      /// bytes produced so far (possibly empty) as a zero-copy view; only the
+      /// concatenation of every `update()` + `finish()` is a valid stream. Never
+      /// flushes the encoder (byte-identity invariant).
       #[napi]
       pub fn update<'env>(
         &mut self,
         env: &'env Env,
-        chunk: Uint8Array,
+        chunk: Either<String, Uint8Array>,
       ) -> Result<BufferSlice<'env>> {
         let writer = self.inner.as_mut().ok_or_else(already_finished)?;
-        writer.write_all(chunk.as_ref()).map_err(map_io)?;
+        // A string compresses its UTF-8 bytes; a Uint8Array its raw bytes. Both
+        // borrow, so no extra copy beyond what `write_all` consumes.
+        let bytes: &[u8] = match &chunk {
+          Either::A(text) => text.as_bytes(),
+          Either::B(buf) => buf.as_ref(),
+        };
+        writer.write_all(bytes).map_err(map_io)?;
         let produced = std::mem::take(&mut writer.$drain().0);
         BufferSlice::from_data(env, produced)
       }

@@ -100,4 +100,89 @@ function createStreamApi({ nativeCompressStream, nativeDecompressStream, Compres
   return { compressStream, decompressStream }
 }
 
-module.exports = { bufferAll, singleChunkStream, createStreamApi }
+/**
+ * The three namespaces and their top-level streaming class names, so the root /
+ * browser entries can polyfill a missing `compressStream` / `decompressStream`
+ * from the (tokio-free, always-present) class API.
+ */
+const NAMESPACE_CLASSES = [
+  ['lzma', 'LzmaCompressor', 'LzmaDecompressor'],
+  ['lzma2', 'Lzma2Compressor', 'Lzma2Decompressor'],
+  ['xz', 'XzCompressor', 'XzDecompressor'],
+]
+
+/**
+ * Return honest `{ lzma, lzma2, xz }` namespace objects for a loaded binding: on
+ * a native build each namespace already carries `compressStream` /
+ * `decompressStream` and is returned unchanged; on the wasm build those tokio-
+ * backed fns are compiled out, so a shim inheriting from the raw namespace (via
+ * `Object.create`, so `compress`/`decompressSync`/… still resolve) is returned
+ * with the two stream fns filled in from the class-API polyfill. The raw
+ * namespace object is NEVER mutated, so `require('./index').<ns>` keeps exposing
+ * the true native surface (used by the tests' native-detection gate).
+ *
+ * @param {Record<string, unknown>} binding  the loaded napi binding (classes + namespaces)
+ * @returns {Record<'lzma'|'lzma2'|'xz', object>}
+ */
+function honestNamespaces(binding) {
+  const out = {}
+  for (const [ns, compressorName, decompressorName] of NAMESPACE_CLASSES) {
+    const namespace = binding[ns]
+    if (!namespace) {
+      continue
+    }
+    if (typeof namespace.compressStream === 'function') {
+      // Native build: the real tokio transforms are already present.
+      out[ns] = namespace
+      continue
+    }
+    // wasm / stream-less build: fill the two fns from the class-API polyfill.
+    const { compressStream, decompressStream } = createStreamApi({
+      nativeCompressStream: namespace.compressStream,
+      nativeDecompressStream: namespace.decompressStream,
+      Compressor: binding[compressorName],
+      Decompressor: binding[decompressorName],
+    })
+    const shim = Object.create(namespace)
+    shim.compressStream = compressStream
+    shim.decompressStream = decompressStream
+    out[ns] = shim
+  }
+  return out
+}
+
+/**
+ * Build `{ createCompressStream, createDecompressStream }` for one namespace:
+ * convenience Node-stream factories that bridge the WHATWG web-stream fns to a
+ * ready-to-pipe Node `Duplex`, so `createReadStream().pipe(createCompressStream())`
+ * works in one call. Written plaintext is fed through an identity `TransformStream`
+ * (the Duplex's writable side) into `compressStream` / `decompressStream`, whose
+ * output becomes the Duplex's readable side.
+ *
+ * `node:stream` is required lazily here (never at module load) so this file stays
+ * importable from the browser entry, which only uses `createStreamApi` /
+ * `honestNamespaces`.
+ *
+ * @param {object} api
+ * @param {Function} api.compressStream    web-stream compressor for the namespace
+ * @param {Function} api.decompressStream  web-stream decompressor for the namespace
+ */
+function createNodeStreamFactories({ compressStream, decompressStream }) {
+  const { Duplex } = require('node:stream')
+  const bridge = (transform) => (options) => {
+    const { readable, writable } = new TransformStream()
+    return Duplex.fromWeb({ writable, readable: transform(readable, options) })
+  }
+  return {
+    createCompressStream: bridge(compressStream),
+    createDecompressStream: bridge(decompressStream),
+  }
+}
+
+module.exports = {
+  bufferAll,
+  singleChunkStream,
+  createStreamApi,
+  honestNamespaces,
+  createNodeStreamFactories,
+}

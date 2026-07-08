@@ -12,6 +12,7 @@ import {
   loadDecompressor,
   lowEntropyBytes,
   oneShot,
+  type CompressorInstance,
   type DecompressorInstance,
   type Namespace,
 } from './helpers'
@@ -80,6 +81,33 @@ for (const ns of NAMESPACES) {
     const compressed = await driveClassCompress(ns, [])
     const restored = await oneShot(ns).decompress(compressed)
     t.is(restored.length, 0)
+  })
+}
+
+// ── String chunks: update() accepts `string`, UTF-8 encoded (T5) ─────────────
+// The class compressor's `update()` takes `string | Uint8Array` to match the
+// one-shot `compress` convention. A string chunk must be UTF-8 encoded, so (1) it
+// round-trips back to the string's UTF-8 bytes, and (2) its compressed stream is
+// BYTE-IDENTICAL to feeding the equivalent Buffer — proving the string path is a
+// pure UTF-8 encode, not a re-interpretation. `INPUT` already contains a 4-byte
+// emoji, so multi-byte encoding is exercised.
+
+const STRING_CHUNK = 'Hello 🚀 streaming string chunk — Ünïcöde'
+
+for (const ns of NAMESPACES) {
+  test(`${ns}: class compress accepts a string chunk (UTF-8) and round-trips`, async (t) => {
+    const Compressor = loadCompressor<CompressorInstance>(ns)
+    const compressor = new Compressor()
+    const head = Buffer.from(compressor.update(STRING_CHUNK))
+    const tail = Buffer.from(await compressor.finish())
+    const restored = await oneShot(ns).decompress(Buffer.concat([head, tail]))
+    t.deepEqual(Buffer.from(restored), Buffer.from(STRING_CHUNK, 'utf8'))
+  })
+
+  test(`${ns}: a string chunk compresses byte-identically to the equivalent Uint8Array`, async (t) => {
+    const fromString = await driveClassCompress(ns, [STRING_CHUNK])
+    const fromBytes = await driveClassCompress(ns, [Buffer.from(STRING_CHUNK, 'utf8')])
+    t.true(fromString.equals(fromBytes), `${ns}: string-chunk output diverged from the Uint8Array output`)
   })
 }
 

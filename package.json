@@ -45,6 +45,7 @@
   "files": [
     "index.js",
     "index.d.ts",
+    "main.js",
     "xz.js",
     "xz.d.ts",
     "lzma.js",
@@ -52,7 +53,7 @@
     "lzma2.js",
     "lzma2.d.ts",
     "stream-polyfill.js",
-    "browser.js"
+    "browser-entry.js"
   ],
   "devDependencies": {
     "@emnapi/core": "^1.10.0",
@@ -111,29 +112,34 @@
     "arrowParens": "always"
   },
   "browser": {
-    "index.js": "./browser.js"
+    "index.js": "./browser-entry.js",
+    "main.js": "./browser-entry.js"
   },
   "exports": {
     ".": {
-      "import": "./index.js",
-      "require": "./index.js",
       "types": "./index.d.ts",
       "browser": {
-        "import": "./browser.js"
-      }
+        "import": "./browser-entry.js"
+      },
+      "import": "./main.js",
+      "require": "./main.js"
     },
     "./xz": {
+      "types": "./xz.d.ts",
       "import": "./xz.js",
       "require": "./xz.js"
     },
     "./lzma": {
+      "types": "./lzma.d.ts",
       "import": "./lzma.js",
       "require": "./lzma.js"
     },
     "./lzma2": {
+      "types": "./lzma2.d.ts",
       "import": "./lzma2.js",
       "require": "./lzma2.js"
-    }
+    },
+    "./stream-polyfill": "./stream-polyfill.js"
   },
   "packageManager": "yarn@4.17.0",
   "funding": {
