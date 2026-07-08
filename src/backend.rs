@@ -151,6 +151,23 @@ impl<W: Write> XzEncoder<W> {
     }
   }
 
+  /// Returns a mutable reference to the inner sink, in both the `Empty` and
+  /// `Started` states.
+  ///
+  /// Lets streaming callers drain the already-produced bytes with
+  /// `std::mem::take` between writes without disturbing the encoder: the
+  /// `XzWriter`'s block accounting tracks total bytes written independently of
+  /// what currently sits in the sink, so emptying it is safe.
+  pub fn sink_mut(&mut self) -> &mut W {
+    match &mut self.state {
+      XzEncoderState::Empty { inner, .. } => inner,
+      XzEncoderState::Started(writer) => writer.inner_mut(),
+      // `Done` is only ever swapped in transiently inside `ensure_started`; it
+      // never persists across a call that could reach this accessor.
+      XzEncoderState::Done => unreachable!("XzEncoder sink accessed in transient Done state"),
+    }
+  }
+
   /// Finish the stream and return the inner sink.
   ///
   /// If no non-empty data was ever written, emits [`EMPTY_XZ_CRC64`] rather than

@@ -1,6 +1,7 @@
 #![deny(clippy::all)]
 
 mod backend;
+mod stream;
 
 #[cfg(all(
   not(target_arch = "x86"),

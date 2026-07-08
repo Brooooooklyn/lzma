@@ -95,6 +95,44 @@ const ONE_SHOT: Record<Namespace, OneShot> = {
 /** The one-shot compress/decompress helpers for a namespace. */
 export const oneShot = (ns: Namespace): OneShot => ONE_SHOT[ns]
 
+// ── Streaming class drivers ─────────────────────────────────────────────────
+
+/**
+ * Minimal runtime shape of a streaming `Compressor` instance (T2). `update()`
+ * is synchronous (returns the bytes produced so far, possibly empty); `finish()`
+ * resolves to the format trailer / tail bytes.
+ */
+export interface CompressorInstance {
+  update(chunk: Uint8Array): Buffer
+  finish(): Promise<Buffer>
+}
+
+/**
+ * Drive a streaming `Compressor` over `chunks`: feed each chunk through
+ * `update()`, then call `finish()`, and return the FULL compressed stream — the
+ * concatenation of every `update()` output plus the `finish()` tail (per-call
+ * output is only meaningful as this concatenation, A4).
+ *
+ * This is the single place the streaming compress tests spell out the
+ * incremental method names, so a rename ripples from here only.
+ */
+export const driveClassCompress = async (
+  ns: Namespace,
+  chunks: readonly Uint8Array[],
+  options?: unknown,
+): Promise<Buffer> => {
+  const Compressor = loadCompressor<CompressorInstance>(ns)
+  const compressor = new Compressor(options)
+  const produced: Buffer[] = []
+  for (const chunk of chunks) {
+    // `update()` is sync; `await` on the plain Buffer is a harmless no-op and
+    // keeps the driver uniform with the async `finish()` below.
+    produced.push(Buffer.from(await compressor.update(chunk)))
+  }
+  produced.push(Buffer.from(await compressor.finish()))
+  return Buffer.concat(produced)
+}
+
 // ── Shared fixtures ─────────────────────────────────────────────────────────
 
 /**
