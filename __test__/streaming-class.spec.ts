@@ -82,12 +82,23 @@ const isInvalidArg = (err: unknown): boolean => err instanceof Error && (err as 
 for (const ns of NAMESPACES) {
   test(`${ns}: out-of-range preset throws InvalidArg (does not crash)`, (t) => {
     const Compressor = loadCompressor(ns)
-    const err = t.throws(() => new Compressor({ preset: 42 }))
-    t.true(isInvalidArg(err), `expected an InvalidArg napi error, got ${String(err)}`)
+    // Both the just-out-of-range 10 and an absurd 42 must be rejected (the crate
+    // would otherwise silently clamp to 9). This is pure validation — it throws
+    // before any encoder/dictionary is allocated, so it is cheap on every arch.
+    for (const preset of [10, 42]) {
+      const err = t.throws(() => new Compressor({ preset }))
+      t.true(isInvalidArg(err), `expected an InvalidArg napi error for preset ${preset}, got ${String(err)}`)
+    }
   })
 
-  test(`${ns}: valid presets (1 and 9) construct and round-trip`, async (t) => {
-    for (const preset of [1, 9]) {
+  // Use CHEAP in-range presets only. Preset bound-checking does not require
+  // constructing at preset 9 — for lzma/xz a preset-9 dict is 64 MiB (~750 MB
+  // encoder alloc) that could OOM constrained 32-bit CI legs. Presets 0/1/6 map
+  // to 256 KiB / 1 MiB / 8 MiB dicts, so this proves in-range presets construct
+  // and round-trip without any heavy high-preset allocation. (lzma2 pins its
+  // dict to 8 MiB regardless of preset, so it would be cheap either way.)
+  test(`${ns}: valid presets (0, 1, 6) construct and round-trip`, async (t) => {
+    for (const preset of [0, 1, 6]) {
       const compressed = await driveClassCompress(ns, chunkBySize(INPUT, 64), { preset })
       const restored = await oneShot(ns).decompress(compressed)
       t.deepEqual(Buffer.from(restored), INPUT, `preset ${preset} must construct and round-trip`)
@@ -95,12 +106,15 @@ for (const ns of NAMESPACES) {
   })
 }
 
-// Encoder-safe dictionary cap (mirrors `MAX_DICT_SIZE` in `src/backend.rs`).
-// `lzma_rust2`'s exported `DICT_SIZE_MAX` (0xfffffff0) is a decode-only bound:
-// feeding it to the encoder reaches `Bt4::new`, where `dict_size as i32 + 1`
-// overflows and a `~dict*8` byte allocation OOM/aborts the process. Validation
-// must reject anything above this cap BEFORE any writer is allocated.
-const MAX_DICT_SIZE = 256 << 20
+// Encoder dictionary cap (mirrors `MAX_DICT_SIZE` in `src/backend.rs`).
+// The cap equals preset 9's dictionary (64 MiB): `dictSize` must not let a
+// caller request more memory than preset selection already permits, so any
+// value above it is rejected. `lzma_rust2`'s exported `DICT_SIZE_MAX`
+// (0xfffffff0) is a decode-only bound: feeding it to the encoder reaches
+// `Bt4::new`, where `dict_size as i32 + 1` overflows and a `~dict*8` byte
+// allocation OOM/aborts the process. Validation must reject anything above this
+// cap BEFORE any writer is allocated.
+const MAX_DICT_SIZE = 64 << 20
 
 test('lzma2: dictSize 0 (< DICT_SIZE_MIN) throws InvalidArg, does not crash', (t) => {
   const Lzma2Compressor = loadCompressor('lzma2')

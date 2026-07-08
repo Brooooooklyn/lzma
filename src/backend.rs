@@ -74,14 +74,25 @@ pub fn validate_preset(preset: u32) -> io::Result<u32> {
   Ok(preset)
 }
 
-/// Project-owned maximum **encoder** dictionary size (256 MiB).
+/// Project-owned maximum **encoder** dictionary size (64 MiB = preset 9's dict).
 ///
-/// `lzma_rust2` exports `DICT_SIZE_MAX` (`!15` == `0xFFFF_FFF0`), but that bound
-/// is *decode*-oriented and is **unsafe to feed to the encoder**. Constructing
-/// an encoder at dictionary size `D` reaches `Bt4::new` (`lzma_rust2`
-/// `lz/bt4.rs`), which does `let cyclic_size = dict_size as i32 + 1;`. For any
-/// `D > i32::MAX` (`0x7FFF_FFFF`) the `as i32` cast wraps negative and the `+ 1`
-/// overflows (panic in a debug build); it then allocates
+/// The cap is derived from a required input, not chosen arbitrarily: the maximum
+/// encoder memory any *standard* configuration can demand is fixed by `preset`.
+/// `lzma_rust2`'s `LzmaOptions::set_preset` clamps `preset` to `.min(9)` and maps
+/// it through `PRESET_TO_DICT_SIZE`, whose top entry is preset 9's
+/// `1 << 26` == 64 MiB (verified against `lzma_rust2` 0.15.8,
+/// `enc/lzma2_writer.rs`). So the optional `dictSize` override must not let a
+/// caller request *more* dictionary — and therefore more memory — than preset
+/// selection already permits. We cap `dictSize` at exactly preset 9's 64 MiB:
+/// no input (preset OR dictSize) can then drive an allocation larger than the
+/// standard preset-9 footprint, which is inherent to LZMA and matches liblzma.
+///
+/// Why not `lzma_rust2`'s exported `DICT_SIZE_MAX` (`!15` == `0xFFFF_FFF0`): that
+/// bound is *decode*-oriented and is **unsafe to feed to the encoder**.
+/// Constructing an encoder at dictionary size `D` reaches `Bt4::new`
+/// (`lzma_rust2` `lz/bt4.rs`), which does `let cyclic_size = dict_size as i32 +
+/// 1;`. For any `D > i32::MAX` (`0x7FFF_FFFF`) the `as i32` cast wraps negative
+/// and the `+ 1` overflows (panic in a debug build); it then allocates
 /// `vec![0i32; cyclic_size * 2]` — roughly `8 * D` bytes — so a value near
 /// `DICT_SIZE_MAX` demands tens of GiB and aborts the process (OOM) in release.
 /// A single *catchable* JS constructor call
@@ -89,18 +100,18 @@ pub fn validate_preset(preset: u32) -> io::Result<u32> {
 /// the whole Node process. We cap the encoder here so validation always yields a
 /// clean `InvalidArg` instead.
 ///
-/// The 256 MiB value is verified against `lzma_rust2` 0.15.8 to satisfy:
-/// * **No overflow:** `256 << 20` (`0x1000_0000`) is ~1/8 of `i32::MAX`, so
+/// The 64 MiB value is verified against `lzma_rust2` 0.15.8 to satisfy:
+/// * **Equals the preset ceiling:** the largest preset dictionary is preset 9's
+///   64 MiB (`PRESET_TO_DICT_SIZE[9] == 1 << 26`), so this cap rejects *nothing*
+///   any in-range preset could imply — plain `{ preset }` usage is never
+///   affected — while forbidding `dictSize` from exceeding it.
+/// * **No overflow:** `64 << 20` (`0x0400_0000`) is ~1/32 of `i32::MAX`, so
 ///   `dict_size as i32 + 1` in `Bt4::new` can never wrap.
-/// * **Never rejects a preset:** the largest preset dictionary is preset 9's
-///   64 MiB (`PRESET_TO_DICT_SIZE[9] == 1 << 26`), comfortably under the cap, so
-///   plain `{ preset }` usage is never affected.
 /// * **Bounded memory:** the BT4 encoder allocates roughly `11.5 * D` (BT4 tree
-///   `~8x`, `Hash234` hash4 table `~1-2x`, sliding-window buffer `~1.5x`). At
-///   the 256 MiB cap that is a documented worst case of ~2.9 GiB per instance;
-///   normal preset-9 usage (64 MiB) is ~0.7 GiB. Large dictionaries are an
-///   explicit opt-in, so this ceiling is deliberate, not a default cost.
-pub const MAX_DICT_SIZE: u32 = 256 << 20;
+///   `~8x`, `Hash234` hash4 table `~1-2x`, sliding-window buffer `~1.5x`). At the
+///   64 MiB cap that is ~750 MB per instance — the inherent cost of LZMA's
+///   highest standard preset, not an extra ceiling we invented.
+pub const MAX_DICT_SIZE: u32 = 64 << 20;
 
 /// Validates a raw-LZMA2 dictionary size against the encoder-safe range
 /// ([`DICT_SIZE_MIN`]`..=`[`MAX_DICT_SIZE`]).
