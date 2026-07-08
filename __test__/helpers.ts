@@ -133,6 +133,45 @@ export const driveClassCompress = async (
   return Buffer.concat(produced)
 }
 
+/**
+ * Minimal runtime shape of a streaming `Decompressor` instance (T3). `update()`
+ * is synchronous (returns the bytes decoded so far, possibly empty); `finish()`
+ * resolves to the decoded tail. Same incremental pair as the compressor.
+ */
+export interface DecompressorInstance {
+  update(chunk: Uint8Array): Buffer
+  finish(): Promise<Buffer>
+}
+
+/**
+ * Drive a streaming `Decompressor` over `chunks` of a COMPRESSED stream: feed
+ * each chunk through `update()`, then call `finish()`, and return the FULL
+ * decompressed output — the concatenation of every `update()` output plus the
+ * `finish()` tail. Mirrors {@link driveClassCompress}.
+ *
+ * `options` is forwarded to the constructor (only `Lzma2Decompressor` reads it —
+ * `{ dictSize?: number }`; the lzma/xz decompressors ignore any argument).
+ *
+ * This is the single place the streaming decompress tests spell out the
+ * incremental method names, so a rename ripples from here only.
+ */
+export const driveClassDecompress = async (
+  ns: Namespace,
+  chunks: readonly Uint8Array[],
+  options?: unknown,
+): Promise<Buffer> => {
+  const Decompressor = loadDecompressor<DecompressorInstance>(ns)
+  const decompressor = new Decompressor(options)
+  const produced: Buffer[] = []
+  for (const chunk of chunks) {
+    // `update()` is sync; `await` on the plain Buffer is a harmless no-op and
+    // keeps the driver uniform with the async `finish()` below.
+    produced.push(Buffer.from(await decompressor.update(chunk)))
+  }
+  produced.push(Buffer.from(await decompressor.finish()))
+  return Buffer.concat(produced)
+}
+
 // ── Shared fixtures ─────────────────────────────────────────────────────────
 
 /**

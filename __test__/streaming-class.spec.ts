@@ -2,7 +2,19 @@ import { createRequire } from 'node:module'
 
 import test from 'ava'
 
-import { chunkBySize, chunkByByte, driveClassCompress, loadCompressor, oneShot, type Namespace } from './helpers'
+import {
+  awkwardChunks,
+  chunkBySize,
+  chunkByByte,
+  driveClassCompress,
+  driveClassDecompress,
+  loadCompressor,
+  loadDecompressor,
+  lowEntropyBytes,
+  oneShot,
+  type DecompressorInstance,
+  type Namespace,
+} from './helpers'
 
 // Bare `require` is undefined under the ESM test loader (@oxc-node); bind one to
 // this file to optionally resolve the native `lzma-native` oracle.
@@ -244,5 +256,167 @@ for (const ns of ['xz', 'lzma'] as const) {
     const compressed = await driveClassCompress(ns, chunkBySize(INPUT, 64))
     const restored = await decode(compressed)
     t.deepEqual(Buffer.from(restored), INPUT)
+  })
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// STREAMING DECOMPRESSOR (T3) — oracle = the T0 one-shot COMPRESS.
+// The pull-based decoders run on a worker thread fed by a bounded channel; the
+// deadlock canaries below (5 MB + decompression bomb) would HANG a naive driver.
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ── 1) One-shot-compressed → class decode, tiny chunks (per format) ──────────
+// Compress with the trusted one-shot (oracle), split the compressed bytes into
+// deliberately tiny chunks, and decode incrementally through the class. Proves
+// the worker reassembles a stream fragmented at arbitrary byte boundaries.
+
+for (const ns of NAMESPACES) {
+  test(`${ns}: class decompress of one-shot output round-trips (3-byte chunks)`, async (t) => {
+    const compressed = await oneShot(ns).compress(INPUT)
+    const restored = await driveClassDecompress(ns, chunkBySize(compressed, 3))
+    t.deepEqual(restored, INPUT)
+  })
+}
+
+// ── 2) Empty-input stream decodes back to empty (per format) ─────────────────
+// The compressed form of empty input is NON-empty (header + end marker, or the
+// canonical empty `.xz`); the worker must consume it and emit zero bytes.
+
+for (const ns of NAMESPACES) {
+  test(`${ns}: class decompress of an empty-input stream yields empty`, async (t) => {
+    const compressed = await oneShot(ns).compress(Buffer.alloc(0))
+    const restored = await driveClassDecompress(ns, chunkByByte(compressed))
+    t.is(restored.length, 0)
+  })
+}
+
+// ── 3) 5 MB incremental fixture (deadlock canary) ────────────────────────────
+// A 5 MB payload compressed then decoded via the class in tiny chunks. The
+// worker emits 64 KiB output messages incrementally while JS keeps feeding, so
+// the bounded channels fill and drain repeatedly. A driver deadlock (worker
+// parked on a full out channel while `update` parks on a full in channel) would
+// HANG this test until ava's 2 min timeout.
+
+const FIVE_MB = lowEntropyBytes(5 * 1024 * 1024)
+
+for (const ns of NAMESPACES) {
+  test(`${ns}: class decompress of a 5 MB stream round-trips incrementally`, async (t) => {
+    const compressed = await oneShot(ns).compress(FIVE_MB)
+    const restored = await driveClassDecompress(ns, chunkBySize(compressed, 5))
+    t.true(restored.equals(FIVE_MB), `${ns} 5 MB round-trip mismatch`)
+  })
+}
+
+// ── 4) Full class round-trip: driveClassCompress → driveClassDecompress ───────
+// End-to-end through BOTH streaming classes across several chunkings, with the
+// compress and decompress halves chunked INDEPENDENTLY (the compressed stream is
+// re-split for the decoder), so no boundary alignment is assumed anywhere.
+
+const ROUND_TRIP_CHUNKINGS: ReadonlyArray<{ name: string; split: (buf: Buffer) => Uint8Array[] }> = [
+  { name: '1-byte', split: (buf) => chunkByByte(buf) },
+  { name: '64-byte', split: (buf) => chunkBySize(buf, 64) },
+  { name: 'single-chunk', split: (buf) => [buf] },
+  { name: 'awkward', split: (buf) => awkwardChunks(buf) },
+]
+
+for (const ns of NAMESPACES) {
+  for (const { name, split } of ROUND_TRIP_CHUNKINGS) {
+    test(`${ns}: class compress → class decompress round-trips (${name})`, async (t) => {
+      const compressed = await driveClassCompress(ns, split(INPUT))
+      const restored = await driveClassDecompress(ns, split(compressed))
+      t.deepEqual(restored, INPUT)
+    })
+  }
+}
+
+// ── 5) lzma2 explicit dictSize round-trip (must match the pinned 8 MiB) ───────
+// Encode + decode both pinned to 8 MiB (`LZMA2_DICT_SIZE`); the raw LZMA2 stream
+// carries no in-band dictionary size, so both sides must agree out of band.
+
+test('lzma2: class decompress with explicit dictSize (8 MiB) round-trips', async (t) => {
+  const compressed = await driveClassCompress('lzma2', chunkBySize(INPUT, 64), { dictSize: 8 << 20 })
+  const restored = await driveClassDecompress('lzma2', chunkBySize(compressed, 3), { dictSize: 8 << 20 })
+  t.deepEqual(restored, INPUT)
+})
+
+// ── 6) lzma2 decompressor dictSize validation (reuse the T2 rejection set) ────
+// The SAME validation infra the encoder uses guards the decoder's `dictSize`:
+// out-of-range / non-integer / ToUint32-bypass values must throw a clean napi
+// `InvalidArg` at CONSTRUCTION — never panic, OOM, or abort the process. A bad
+// value must reject before any worker/reader is built. (`MAX_DICT_SIZE` is
+// declared once above, shared with the compressor half.)
+
+test('lzma2: decompressor rejects invalid dictSize with InvalidArg (no crash)', (t) => {
+  const Lzma2Decompressor = loadDecompressor('lzma2')
+  // 0: below DICT_SIZE_MIN. (64<<20)+1: above the encoder-safe cap. NaN /
+  // 4194304.5: non-finite / fractional. 4294967296 (2^32): would wrap to 0 under
+  // ToUint32. 0xfffffff0: lzma_rust2's decode-only DICT_SIZE_MAX (unsafe here).
+  for (const dictSize of [0, MAX_DICT_SIZE + 1, NaN, Infinity, 4194304.5, 4294967296, 0xfffffff0]) {
+    const err = t.throws(() => new Lzma2Decompressor({ dictSize }))
+    t.true(isInvalidArg(err), `expected an InvalidArg napi error for dictSize ${dictSize}, got ${String(err)}`)
+  }
+})
+
+test('lzma2: decompressor with absent options uses the pinned 8 MiB default', async (t) => {
+  // No options → default 8 MiB, which matches the encoder's pinned default, so a
+  // stream compressed at the default dictionary decodes without an explicit size.
+  const compressed = await oneShot('lzma2').compress(INPUT)
+  const restored = await driveClassDecompress('lzma2', chunkBySize(compressed, 3))
+  t.deepEqual(restored, INPUT)
+})
+
+// ── 7) Decompression-bomb / backpressure (the deadlock canary) ───────────────
+// A highly compressible 8 MiB-of-zeros payload compresses to a few hundred
+// bytes. Fed to the decoder in tiny chunks, the worker wants to produce all
+// 8 MiB at once, but the bounded out channel forces it to block on `out_tx.send`
+// after ~512 KiB in flight — so `update` MUST keep draining to make progress.
+// A naive driver deadlocks here; a correct one round-trips to 8 MiB of zeros
+// within ava's timeout and with bounded (not 8 MiB × N) memory.
+
+const EIGHT_MIB_ZEROS = Buffer.alloc(8 << 20)
+
+for (const ns of NAMESPACES) {
+  test(`${ns}: decompression bomb (8 MiB zeros, tiny chunks) round-trips without hanging`, async (t) => {
+    const compressed = await oneShot(ns).compress(EIGHT_MIB_ZEROS)
+    t.true(compressed.length < EIGHT_MIB_ZEROS.length / 100, `${ns} bomb payload should be tiny`)
+    const restored = await driveClassDecompress(ns, chunkBySize(compressed, 4))
+    t.is(restored.length, EIGHT_MIB_ZEROS.length)
+    t.true(restored.equals(EIGHT_MIB_ZEROS), `${ns} bomb round-trip mismatch`)
+  })
+}
+
+// ── 8) Truncated input → finish() rejects, process stays alive (smoke) ────────
+// T6 owns the full garbage/truncated assertions; here we only prove the plumbing
+// does not HANG or crash. Feed the first half of a valid stream (mid-stream
+// truncation) and assert the driver rejects, then prove the process is alive by
+// decoding a fresh valid stream on a NEW instance right after.
+
+for (const ns of NAMESPACES) {
+  test(`${ns}: truncated stream rejects and leaves the process alive`, async (t) => {
+    const compressed = await oneShot(ns).compress(INPUT)
+    const truncated = compressed.subarray(0, Math.floor(compressed.length / 2))
+    await t.throwsAsync(() => driveClassDecompress(ns, chunkBySize(truncated, 7)))
+    // The runner is still alive: a brand-new instance decodes a valid stream.
+    const restored = await driveClassDecompress(ns, chunkBySize(compressed, 7))
+    t.deepEqual(restored, INPUT)
+  })
+}
+
+// ── 9) Lifecycle guards: double-finish and use-after-finish reject cleanly ────
+
+for (const ns of NAMESPACES) {
+  test(`${ns}: second finish() and update()-after-finish() reject (no panic)`, async (t) => {
+    const compressed = await oneShot(ns).compress(INPUT)
+    const Decompressor = loadDecompressor<DecompressorInstance>(ns)
+    const d = new Decompressor()
+    // The valid output is `update()` output + `finish()` tail (some formats emit
+    // the bulk during `update()`, others hold it until the EOF at `finish()`).
+    const mid = Buffer.from(d.update(compressed))
+    const tail = await d.finish()
+    t.true(Buffer.concat([mid, tail]).equals(INPUT), 'first finish() returns the full output')
+    // `finish()`/`update()` return a napi `Result`, so the post-finish guard is a
+    // SYNCHRONOUS throw at the call site (not a rejected promise).
+    t.throws(() => d.finish(), undefined, 'second finish() must throw')
+    t.throws(() => d.update(Buffer.alloc(1)), undefined, 'update() after finish() must throw')
   })
 }

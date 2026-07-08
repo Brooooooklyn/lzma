@@ -57,8 +57,11 @@ const {
 })
 export default __napiModule.exports
 export const Lzma2Compressor = __napiModule.exports.Lzma2Compressor
+export const Lzma2Decompressor = __napiModule.exports.Lzma2Decompressor
 export const LzmaCompressor = __napiModule.exports.LzmaCompressor
+export const LzmaDecompressor = __napiModule.exports.LzmaDecompressor
 export const XzCompressor = __napiModule.exports.XzCompressor
+export const XzDecompressor = __napiModule.exports.XzDecompressor
 export const lzma = __napiModule.exports.lzma
 export const lzma2 = __napiModule.exports.lzma2
 export const xz = __napiModule.exports.xz

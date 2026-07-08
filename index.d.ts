@@ -24,6 +24,24 @@ export declare class Lzma2Compressor {
   finish(): Promise<Buffer>
 }
 
+/** Incremental raw LZMA2 decompressor (dictionary pinned out of band, A10). */
+export declare class Lzma2Decompressor {
+  /** Create a streaming decompressor and start its decoder worker thread. */
+  constructor(options?: Lzma2DecompressorOptions | undefined | null)
+  /**
+   * Feed one compressed chunk; returns the bytes decoded so far (possibly
+   * empty) as a zero-copy view. Deadlock-free under backpressure. The valid
+   * output is the concatenation of every `update()` plus the `finish()`
+   * tail.
+   */
+  update(chunk: Uint8Array): Buffer
+  /**
+   * Signal EOF and resolve to the decoded tail off the JS thread.
+   * Idempotency-guarded: a second call rejects cleanly.
+   */
+  finish(): Promise<Buffer>
+}
+
 /** Incremental `.lzma` (LZMA1) compressor: 13-byte header + end marker. */
 export declare class LzmaCompressor {
   /**
@@ -44,6 +62,24 @@ export declare class LzmaCompressor {
   /**
    * Flush the encoder and emit the format trailer off the JS thread.
    * Resolves to the tail bytes. Idempotency-guarded: a second call rejects.
+   */
+  finish(): Promise<Buffer>
+}
+
+/** Incremental `.lzma` (LZMA1) decompressor: reads dict/size from the header. */
+export declare class LzmaDecompressor {
+  /** Create a streaming decompressor and start its decoder worker thread. */
+  constructor()
+  /**
+   * Feed one compressed chunk; returns the bytes decoded so far (possibly
+   * empty) as a zero-copy view. Deadlock-free under backpressure. The valid
+   * output is the concatenation of every `update()` plus the `finish()`
+   * tail.
+   */
+  update(chunk: Uint8Array): Buffer
+  /**
+   * Signal EOF and resolve to the decoded tail off the JS thread.
+   * Idempotency-guarded: a second call rejects cleanly.
    */
   finish(): Promise<Buffer>
 }
@@ -72,6 +108,24 @@ export declare class XzCompressor {
   finish(): Promise<Buffer>
 }
 
+/** Incremental `.xz` decompressor (supports concatenated `.xz` streams). */
+export declare class XzDecompressor {
+  /** Create a streaming decompressor and start its decoder worker thread. */
+  constructor()
+  /**
+   * Feed one compressed chunk; returns the bytes decoded so far (possibly
+   * empty) as a zero-copy view. Deadlock-free under backpressure. The valid
+   * output is the concatenation of every `update()` plus the `finish()`
+   * tail.
+   */
+  update(chunk: Uint8Array): Buffer
+  /**
+   * Signal EOF and resolve to the decoded tail off the JS thread.
+   * Idempotency-guarded: a second call rejects cleanly.
+   */
+  finish(): Promise<Buffer>
+}
+
 /** Options for the LZMA1 and XZ streaming compressors. */
 export interface CompressorOptions {
   /** Compression preset `0..=9` (default 6). Higher = smaller output, slower. */
@@ -86,6 +140,18 @@ export interface Lzma2CompressorOptions {
   /** Compression preset `0..=9` (default 6). */
   preset?: number
   /** Dictionary size in bytes (defaults to 8 MiB, [`backend::LZMA2_DICT_SIZE`]). */
+  dictSize?: number
+}
+
+/**
+ * Options for the LZMA2 streaming decompressor: it must be told the dictionary
+ * size the stream was encoded with, because raw LZMA2 carries none in-band.
+ */
+export interface Lzma2DecompressorOptions {
+  /**
+   * Dictionary size in bytes (defaults to 8 MiB, [`backend::LZMA2_DICT_SIZE`],
+   * which MUST match the encoder's pinned default, A10).
+   */
   dictSize?: number
 }
 

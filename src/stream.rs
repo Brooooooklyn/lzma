@@ -22,7 +22,9 @@
 //! namespaced `Compressor` name — the T1 spike proved namespaced same-named
 //! classes break `.d.ts` codegen (see `__test__/helpers.ts`).
 
-use std::io::{self, Write};
+use std::io::{self, Read, Write};
+use std::sync::mpsc::{Receiver, Sender, SyncSender};
+use std::thread::JoinHandle;
 
 use lzma_rust2::{Lzma2Writer, LzmaWriter};
 use napi::bindgen_prelude::*;
@@ -229,5 +231,379 @@ define_compressor! {
       .map_err(map_invalid)?
       .unwrap_or(DEFAULT_PRESET);
     XzEncoder::new(SharedSink::default(), preset).map_err(map_io)
+  },
+}
+
+// ===========================================================================
+// Streaming decompressors (T3).
+// ===========================================================================
+//
+// lzma-rust2's DECODERS are pull-based (`impl io::Read`) — the mirror image of
+// the push-based encoders above. A streaming `update(chunk)` API is push, so
+// each decompressor runs its decoder on a dedicated worker thread that PULLS
+// compressed bytes from a channel ([`ChannelReader`]) and PUSHES the decoded
+// bytes back over a second channel.
+//
+// Channel-direction asymmetry (the crux of the deadlock-freedom):
+//
+// * The OUT channel (worker -> JS) is BOUNDED (`sync_channel(OUT_CHANNEL_BOUND)`).
+//   The worker blocks on `out_tx.send` once it is full, so a decompression bomb
+//   (a tiny compressed input expanding to gigabytes) can NEVER run the worker
+//   more than `OUT_CHANNEL_BOUND * 64 KiB` ahead of what JS has drained — memory
+//   stays bounded (A4). This is where bomb backpressure lives.
+//
+// * The IN channel (JS -> worker) is UNBOUNDED, and `update()` hands off its
+//   chunk with a NON-BLOCKING send. This is deliberate and load-bearing:
+//   `update()` is a SYNCHRONOUS napi method running on the main JS thread, so it
+//   must NEVER block — a blocking send/recv there freezes the whole libuv event
+//   loop. A bounded in-channel with a blocking "if in is full, recv from out"
+//   driver DEADLOCKS in practice: a decoder buffers decoded bytes internally
+//   until its 64 KiB read buffer fills or it hits the end marker, so for any
+//   stream whose total output is < 64 KiB (fed in tiny chunks) the worker
+//   consumes ALL input while producing ZERO output, then parks on the in-channel
+//   — while `update`, having filled the in-channel, parks on `out_rx.recv()`
+//   waiting for output that never comes. Making the in-channel unbounded removes
+//   both the freeze and the deadlock; input backlog is bounded anyway by the
+//   caller-provided compressed size, not by bomb expansion.
+
+/// Bound (in messages) of the decoded-OUT channel — the decompression-bomb
+/// backpressure knob. Each out message is `<= 64 KiB`, so the worker can run at
+/// most ~`OUT_CHANNEL_BOUND * 64 KiB` ahead of the JS consumer. (The in-channel
+/// is intentionally unbounded; see the module comment.)
+const OUT_CHANNEL_BOUND: usize = 8;
+
+/// A worker -> JS message: either a decoded chunk or a stringified decode error.
+/// `String` (not `io::Error`) so it is `Send` and cheap to move across the
+/// channel; the driver re-wraps it as a napi error.
+type WorkerMsg = std::result::Result<Vec<u8>, String>;
+
+/// Blocking, buffer-FILLING [`io::Read`] adapter that pulls compressed chunks
+/// off the input channel. It lives INSIDE the worker thread and is what makes the
+/// decoder's eager header read block until JS feeds the first `update()`.
+///
+/// It fills `buf` COMPLETELY, blocking on `recv()` for as many chunks as needed,
+/// and returns a short read (possibly `Ok(0)`) ONLY at true EOF — i.e. once the
+/// sender has been dropped (`recv()` -> `RecvError`; the JS side dropped `in_tx`
+/// in `finish()`/`Drop`) and no buffered bytes remain. This "read fully or EOF"
+/// contract is load-bearing:
+///
+/// * `lzma_rust2`'s `XzReader` reads its block padding / magic / framing with
+///   plain `read()` and treats a short read as corruption
+///   (`"incomplete XZ block padding"`), assuming — as a slice reader would
+///   guarantee — that `read()` fills the buffer. A chunk-boundary-respecting
+///   reader that returned partial reads would spuriously fail those checks, so we
+///   must never split a requested read across a chunk boundary except at EOF.
+/// * A merely empty-so-far state must NEVER surface as `Ok(0)`, or the decoder
+///   would mistake a mid-stream lull for EOF and fail its `read_exact` of the
+///   header/trailer.
+///
+/// Empty chunks (from empty `update()` calls) are transparently skipped.
+struct ChannelReader {
+  rx: Receiver<Vec<u8>>,
+  cur: Vec<u8>,
+  pos: usize,
+}
+
+impl ChannelReader {
+  fn new(rx: Receiver<Vec<u8>>) -> Self {
+    Self {
+      rx,
+      cur: Vec::new(),
+      pos: 0,
+    }
+  }
+}
+
+impl Read for ChannelReader {
+  fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+    let mut written = 0;
+    while written < buf.len() {
+      if self.pos >= self.cur.len() {
+        // Current chunk drained; block for the next. A dropped sender is the
+        // only true EOF — return however much we have gathered (a short read,
+        // possibly 0), never a false EOF mid-stream.
+        match self.rx.recv() {
+          Ok(chunk) => {
+            self.cur = chunk;
+            self.pos = 0;
+            continue; // chunk may be empty; the loop re-checks and blocks again
+          }
+          Err(_) => break,
+        }
+      }
+      let n = std::cmp::min(buf.len() - written, self.cur.len() - self.pos);
+      buf[written..written + n].copy_from_slice(&self.cur[self.pos..self.pos + n]);
+      self.pos += n;
+      written += n;
+    }
+    Ok(written)
+  }
+}
+
+/// Worker loop: pump decoded bytes onto the out channel until EOF (`Ok(0)`), a
+/// decode error, or the consumer dropping the out receiver.
+fn pump_reader<R: Read>(mut reader: R, out_tx: &SyncSender<WorkerMsg>) {
+  let mut buf = [0u8; 64 * 1024];
+  loop {
+    match reader.read(&mut buf) {
+      Ok(0) => break,
+      Ok(n) => {
+        // `send` blocks when the out channel is full — this is the
+        // backpressure that bounds memory under a decompression bomb. A send
+        // error means the consumer went away (Drop); just exit.
+        if out_tx.send(Ok(buf[..n].to_vec())).is_err() {
+          break;
+        }
+      }
+      Err(e) => {
+        let _ = out_tx.send(Err(e.to_string()));
+        break;
+      }
+    }
+  }
+}
+
+/// Re-wrap a worker message as a napi result. A worker error is always a decode
+/// failure (the [`ChannelReader`] never yields an `io::Error`), i.e. malformed
+/// input, so it maps to `InvalidArg` — matching the one-shot decode path.
+fn decode_msg(msg: WorkerMsg) -> Result<Vec<u8>> {
+  msg.map_err(|reason| napi::Error::new(napi::Status::InvalidArg, reason))
+}
+
+/// The double-finish / use-after-finish guard error (a clean napi error, never a
+/// panic).
+fn already_finished_decompressor() -> napi::Error {
+  napi::Error::new(
+    napi::Status::InvalidArg,
+    "decompressor already finished".to_owned(),
+  )
+}
+
+/// The live channels + worker handle backing one decompressor. Every field is
+/// `Send`, so the whole struct can move onto the libuv pool in `finish()`.
+struct DecompressorState {
+  /// Unbounded so the synchronous `update()` never blocks the JS thread (see the
+  /// module comment). `Sender`, not `SyncSender`.
+  in_tx: Sender<Vec<u8>>,
+  out_rx: Receiver<WorkerMsg>,
+  /// `Some` until [`into_finish`](DecompressorState::into_finish) joins it.
+  /// Dropped (detached) if the class is GC'd without `finish()`: the worker then
+  /// EOFs on the dropped `in_tx` (and unparks from any `out_tx.send` when
+  /// `out_rx` drops), so it exits on its own — no hung thread, no join needed.
+  worker: Option<JoinHandle<()>>,
+}
+
+impl DecompressorState {
+  /// Create the channels (unbounded in, bounded out) and spawn the worker, which
+  /// builds its pull-reader INSIDE the thread (so the eager header read blocks on
+  /// the channel) via `make_reader`. Spawn failure maps to a napi error — never a
+  /// panic/abort on a no-thread target.
+  fn spawn<R, F>(thread_name: &str, make_reader: F) -> Result<Self>
+  where
+    R: Read + 'static,
+    F: FnOnce(ChannelReader) -> io::Result<R> + Send + 'static,
+  {
+    let (in_tx, in_rx) = std::sync::mpsc::channel::<Vec<u8>>();
+    let (out_tx, out_rx) = std::sync::mpsc::sync_channel::<WorkerMsg>(OUT_CHANNEL_BOUND);
+    let worker = std::thread::Builder::new()
+      .name(thread_name.to_owned())
+      .spawn(move || match make_reader(ChannelReader::new(in_rx)) {
+        Ok(reader) => pump_reader(reader, &out_tx),
+        // A reader that fails to build (e.g. a malformed header the eager
+        // construction rejects) reports the error, then the thread exits.
+        Err(e) => {
+          let _ = out_tx.send(Err(e.to_string()));
+        }
+      })
+      .map_err(|e| {
+        napi::Error::from_reason(format!("failed to spawn {thread_name} worker thread: {e}"))
+      })?;
+    Ok(Self {
+      in_tx,
+      out_rx,
+      worker: Some(worker),
+    })
+  }
+
+  /// Feed one chunk and return every decoded byte available so far (possibly
+  /// empty).
+  ///
+  /// FULLY NON-BLOCKING, so it can never freeze the JS event loop or deadlock:
+  /// the chunk is handed to the unbounded in-channel with a non-blocking `send`,
+  /// and the out-channel is drained with `try_recv`. Bomb backpressure is NOT
+  /// here — it is on the bounded out-channel, where the worker parks on
+  /// `out_tx.send`; each `update()`/`finish()` drains that channel so the worker
+  /// can only ever run a bounded distance ahead. A decode error the worker has
+  /// already reported is surfaced eagerly by the drain.
+  fn update_bytes(&mut self, chunk: &[u8]) -> Result<Vec<u8>> {
+    let mut out = Vec::new();
+    // Drain whatever the worker produced so far (also surfaces a decode error).
+    while let Ok(msg) = self.out_rx.try_recv() {
+      out.extend(decode_msg(msg)?);
+    }
+    // Hand the chunk off without blocking. A send error means the worker already
+    // exited (clean EOF or an error it already pushed onto the out channel);
+    // that is not fatal here — the trailing output/error is drained above and in
+    // `finish()`, so the extra input is simply ignored.
+    let _ = self.in_tx.send(chunk.to_vec());
+    // Drain again: the handoff may have unblocked a worker parked on a full out
+    // channel, and earlier input may have just now produced output.
+    while let Ok(msg) = self.out_rx.try_recv() {
+      out.extend(decode_msg(msg)?);
+    }
+    Ok(out)
+  }
+
+  /// Off the JS thread: signal EOF (drop `in_tx`), drain the decoded tail, join
+  /// the worker, and surface any worker error. Consumes `self`.
+  fn into_finish(mut self) -> Result<Vec<u8>> {
+    // Dropping the sender is the EOF signal the ChannelReader turns into
+    // `Ok(0)` for the decoder.
+    drop(self.in_tx);
+    let mut out = Vec::new();
+    let mut decode_err = None;
+    // `recv()` yields `Err(RecvError)` once the worker drops `out_tx` (it is
+    // done), which ends the loop; a decode error breaks early.
+    while let Ok(msg) = self.out_rx.recv() {
+      match decode_msg(msg) {
+        Ok(bytes) => out.extend(bytes),
+        Err(e) => {
+          decode_err = Some(e);
+          break;
+        }
+      }
+    }
+    if let Some(handle) = self.worker.take() {
+      // A panicked worker (join Err) must surface as an error, never abort the
+      // process. On the normal path this returns immediately (the worker has
+      // already exited).
+      if handle.join().is_err() {
+        return Err(napi::Error::from_reason(
+          "decompressor worker thread panicked".to_owned(),
+        ));
+      }
+    }
+    match decode_err {
+      Some(e) => Err(e),
+      None => Ok(out),
+    }
+  }
+}
+
+/// Off-thread `finish()` for the decompressors: drains the decoded tail and
+/// joins the worker on the libuv pool, mirroring [`CompressorFinish`].
+/// `Option::take` makes a second poll / second `finish()` a clean napi error
+/// instead of a panic.
+pub struct DecompressorFinish(Option<DecompressorState>);
+
+#[napi]
+impl Task for DecompressorFinish {
+  type Output = Vec<u8>;
+  type JsValue = Buffer;
+
+  fn compute(&mut self) -> Result<Self::Output> {
+    let state = self.0.take().ok_or_else(already_finished_decompressor)?;
+    state.into_finish()
+  }
+
+  fn resolve(&mut self, _env: Env, output: Self::Output) -> Result<Self::JsValue> {
+    Ok(Buffer::from(output))
+  }
+}
+
+/// Generates a top-level `#[napi]` streaming decompressor class. The `$ctor`
+/// body validates any user options, then builds a [`DecompressorState`] via
+/// [`DecompressorState::spawn`] and wraps it in `Ok(Self { .. })`. `update()`
+/// and `finish()` are identical across formats, so only the constructor varies.
+macro_rules! define_decompressor {
+  (
+    doc: $doc:literal,
+    $class:ident,
+    new( $($param:tt)* ) $ctor:block $(,)?
+  ) => {
+    #[doc = $doc]
+    #[napi]
+    pub struct $class {
+      /// `None` once `finish()` has consumed the worker (idempotency guard).
+      inner: Option<DecompressorState>,
+    }
+
+    #[napi]
+    impl $class {
+      /// Create a streaming decompressor and start its decoder worker thread.
+      #[napi(constructor)]
+      pub fn new( $($param)* ) -> Result<Self> $ctor
+
+      /// Feed one compressed chunk; returns the bytes decoded so far (possibly
+      /// empty) as a zero-copy view. Deadlock-free under backpressure. The valid
+      /// output is the concatenation of every `update()` plus the `finish()`
+      /// tail.
+      #[napi]
+      pub fn update<'env>(
+        &mut self,
+        env: &'env Env,
+        chunk: Uint8Array,
+      ) -> Result<BufferSlice<'env>> {
+        let state = self.inner.as_mut().ok_or_else(already_finished_decompressor)?;
+        let produced = state.update_bytes(chunk.as_ref())?;
+        BufferSlice::from_data(env, produced)
+      }
+
+      /// Signal EOF and resolve to the decoded tail off the JS thread.
+      /// Idempotency-guarded: a second call rejects cleanly.
+      #[napi]
+      pub fn finish(&mut self) -> Result<AsyncTask<DecompressorFinish>> {
+        let state = self.inner.take().ok_or_else(already_finished_decompressor)?;
+        Ok(AsyncTask::new(DecompressorFinish(Some(state))))
+      }
+    }
+  };
+}
+
+/// Options for the LZMA2 streaming decompressor: it must be told the dictionary
+/// size the stream was encoded with, because raw LZMA2 carries none in-band.
+#[napi(object)]
+#[derive(Default)]
+pub struct Lzma2DecompressorOptions {
+  /// Dictionary size in bytes (defaults to 8 MiB, [`backend::LZMA2_DICT_SIZE`],
+  /// which MUST match the encoder's pinned default, A10).
+  pub dict_size: Option<f64>,
+}
+
+define_decompressor! {
+  doc: "Incremental `.lzma` (LZMA1) decompressor: reads dict/size from the header.",
+  LzmaDecompressor,
+  new() {
+    let state = DecompressorState::spawn("lzma-decompressor", backend::lzma_reader)?;
+    Ok(Self { inner: Some(state) })
+  },
+}
+
+define_decompressor! {
+  doc: "Incremental raw LZMA2 decompressor (dictionary pinned out of band, A10).",
+  Lzma2Decompressor,
+  new(options: Option<Lzma2DecompressorOptions>) {
+    let opts = options.unwrap_or_default();
+    // `None` keeps the pinned `LZMA2_DICT_SIZE` default (A10); an explicit value
+    // is validated with the SAME infra as the encoder so a bad size is a clean
+    // `InvalidArg` at construction, never a panic/OOM.
+    let dict_size = opts
+      .dict_size
+      .map(|value| backend::coerce_u32_index(value, "dictSize").and_then(backend::validate_dict_size))
+      .transpose()
+      .map_err(map_invalid)?;
+    let state = DecompressorState::spawn("lzma2-decompressor", move |src| {
+      Ok(backend::lzma2_reader(src, dict_size))
+    })?;
+    Ok(Self { inner: Some(state) })
+  },
+}
+
+define_decompressor! {
+  doc: "Incremental `.xz` decompressor (supports concatenated `.xz` streams).",
+  XzDecompressor,
+  new() {
+    let state = DecompressorState::spawn("xz-decompressor", backend::xz_reader)?;
+    Ok(Self { inner: Some(state) })
   },
 }
