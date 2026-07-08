@@ -12,6 +12,7 @@ import {
   loadDecompressor,
   lowEntropyBytes,
   oneShot,
+  IS_SLOW_EMULATED_ARCH,
   SUPPORTS_STREAMING_WASI,
   type CompressorInstance,
   type DecompressorInstance,
@@ -33,6 +34,16 @@ const IS_WASI = !!process.env.NAPI_RS_FORCE_WASI
 // under WASI unless `SUPPORTS_STREAMING_WASI` flips true; native / musl / qemu
 // still cover them. This is an honest coordination skip, NOT a silent pass.
 const classTest = IS_WASI && !SUPPORTS_STREAMING_WASI ? test.skip : test
+
+// The 5 MB canary and the 8 MiB decompression bomb below each drive > 4 MiB
+// through the class worker. On the QEMU-emulated s390x/ppc64le legs `classTest`
+// is NOT skipped (those legs are NOT WASI — `classTest == test` there), so without
+// this extra gate they run under emulation, exceed ava's timeout, and are swallowed
+// by `continue-on-error`, voiding the intended big-endian coverage. `bigClassTest`
+// is an HONEST ava skip on the emulated legs (inheriting the WASI class-skip via the
+// same expression); native keeps full > 4 MiB coverage. See IS_SLOW_EMULATED_ARCH.
+const bigClassTest = (IS_WASI && !SUPPORTS_STREAMING_WASI) || IS_SLOW_EMULATED_ARCH ? test.skip : test
+const EMULATED_SKIP_NOTE = IS_SLOW_EMULATED_ARCH ? ' [>4MB: skipped on emulated s390x/ppc64le]' : ''
 
 const INPUT = Buffer.from('Hello 🚀'.repeat(500), 'utf8')
 
@@ -339,7 +350,7 @@ for (const ns of NAMESPACES) {
 const FIVE_MB = lowEntropyBytes(5 * 1024 * 1024)
 
 for (const ns of NAMESPACES) {
-  classTest(`${ns}: class decompress of a 5 MB stream round-trips incrementally`, async (t) => {
+  bigClassTest(`${ns}: class decompress of a 5 MB stream round-trips incrementally${EMULATED_SKIP_NOTE}`, async (t) => {
     const compressed = await oneShot(ns).compress(FIVE_MB)
     const restored = await driveClassDecompress(ns, chunkBySize(compressed, 5))
     t.true(restored.equals(FIVE_MB), `${ns} 5 MB round-trip mismatch`)
@@ -415,13 +426,16 @@ classTest('lzma2: decompressor with absent options uses the pinned 8 MiB default
 const EIGHT_MIB_ZEROS = Buffer.alloc(8 << 20)
 
 for (const ns of NAMESPACES) {
-  classTest(`${ns}: decompression bomb (8 MiB zeros, tiny chunks) round-trips without hanging`, async (t) => {
-    const compressed = await oneShot(ns).compress(EIGHT_MIB_ZEROS)
-    t.true(compressed.length < EIGHT_MIB_ZEROS.length / 100, `${ns} bomb payload should be tiny`)
-    const restored = await driveClassDecompress(ns, chunkBySize(compressed, 4))
-    t.is(restored.length, EIGHT_MIB_ZEROS.length)
-    t.true(restored.equals(EIGHT_MIB_ZEROS), `${ns} bomb round-trip mismatch`)
-  })
+  bigClassTest(
+    `${ns}: decompression bomb (8 MiB zeros, tiny chunks) round-trips without hanging${EMULATED_SKIP_NOTE}`,
+    async (t) => {
+      const compressed = await oneShot(ns).compress(EIGHT_MIB_ZEROS)
+      t.true(compressed.length < EIGHT_MIB_ZEROS.length / 100, `${ns} bomb payload should be tiny`)
+      const restored = await driveClassDecompress(ns, chunkBySize(compressed, 4))
+      t.is(restored.length, EIGHT_MIB_ZEROS.length)
+      t.true(restored.equals(EIGHT_MIB_ZEROS), `${ns} bomb round-trip mismatch`)
+    },
+  )
 }
 
 // ── 8) Truncated input → finish() rejects, process stays alive (smoke) ────────

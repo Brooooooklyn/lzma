@@ -5,6 +5,7 @@ import test from 'ava'
 import type { Preset } from 'lzma-native'
 
 import { compress, compressSync, decompress, decompressSync } from '../xz'
+import { IS_SLOW_EMULATED_ARCH, MAX_EMULATED_FIXTURE_BYTES } from './helpers'
 
 let decompressNative: typeof import('lzma-native').decompress
 let compressNative: typeof import('lzma-native').compress
@@ -75,24 +76,31 @@ const FIXTURES: Array<{ name: string; data: Buffer }> = [
 ]
 
 for (const { name, data } of FIXTURES) {
-  test(`xz async round-trip: ${name}`, async (t) => {
+  // Fixtures > 4 MiB (the >8MB one) are an HONEST skip on the QEMU-emulated
+  // s390x/ppc64le legs — they exceed ava's timeout under emulation and the failure
+  // is swallowed by `continue-on-error` — while still running on every native arch.
+  const tooBigForEmulated = IS_SLOW_EMULATED_ARCH && data.length > MAX_EMULATED_FIXTURE_BYTES
+  const rt = tooBigForEmulated ? test.skip : test
+  const suffix = tooBigForEmulated ? ' [>4MB: skipped on emulated s390x/ppc64le]' : ''
+
+  rt(`xz async round-trip: ${name}${suffix}`, async (t) => {
     const output = await decompress(await compress(data))
     t.deepEqual(Buffer.from(output), data)
   })
 
-  test(`xz sync round-trip: ${name}`, (t) => {
+  rt(`xz sync round-trip: ${name}${suffix}`, (t) => {
     const output = decompressSync(compressSync(data))
     t.deepEqual(Buffer.from(output), data)
   })
 
   // our compress -> lzma-native decompress (self round-trip when lzma-native is absent)
-  test(`xz cross-compat, ours -> native: ${name}`, async (t) => {
+  rt(`xz cross-compat, ours -> native: ${name}${suffix}`, async (t) => {
     const output = await nativeDecompress(await compress(data))
     t.deepEqual(Buffer.from(output), data)
   })
 
   // lzma-native compress -> our decompress (self round-trip when lzma-native is absent)
-  test(`xz cross-compat, native -> ours: ${name}`, async (t) => {
+  rt(`xz cross-compat, native -> ours: ${name}${suffix}`, async (t) => {
     const output = await decompress(await nativeCompress(data))
     t.deepEqual(Buffer.from(output), data)
   })

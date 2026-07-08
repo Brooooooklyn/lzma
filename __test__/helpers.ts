@@ -62,6 +62,42 @@ export const IS_WASI = !!process.env.NAPI_RS_FORCE_WASI
 export const SUPPORTS_STREAMING_WASI = false
 
 /**
+ * True on the QEMU-emulated big-endian / ppc64 `test-linux-binding` CI legs —
+ * `s390x-unknown-linux-gnu` and `powerpc64le-unknown-linux-gnu` — which run
+ * `npm run test` under `docker/setup-qemu-action` user-mode emulation and are
+ * marked `continue-on-error` in `.github/workflows/CI.yml`.
+ *
+ * Those legs are ~10-30× slower than native, so a multi-MB round-trip that takes
+ * ~20-25 s natively blows past ava's ~2 min per-test timeout under emulation — and
+ * because the leg is `continue-on-error`, that timeout is SILENTLY swallowed,
+ * voiding the intended big-endian CRC64 / endian coverage. So specs gate any
+ * fixture / driven payload LARGER than {@link MAX_EMULATED_FIXTURE_BYTES} OFF these
+ * legs (an HONEST ava skip), while keeping the full large-fixture coverage on every
+ * native (x64 / arm64 / musl) leg.
+ *
+ * Node reports `process.arch` as `s390x` on s390x and as `ppc64` on ppc64le
+ * (ppc64le shares the `ppc64` arch id — endianness comes from `os.endianness()`);
+ * `ppc64le` is listed defensively in case a future runtime reports it directly.
+ */
+export const IS_SLOW_EMULATED_ARCH = ['s390x', 'ppc64', 'ppc64le'].includes(process.arch)
+
+/**
+ * Fixtures / driven payloads STRICTLY LARGER than this (4 MiB) are skipped on
+ * {@link IS_SLOW_EMULATED_ARCH}; anything ≤ 4 MiB runs on every arch.
+ */
+export const MAX_EMULATED_FIXTURE_BYTES = 4 * 1024 * 1024
+
+/**
+ * Whether a fixture / payload of `byteLength` bytes should RUN on the current arch.
+ * It runs everywhere on native; on the slow emulated legs it runs only when it is
+ * at most {@link MAX_EMULATED_FIXTURE_BYTES} (so > 4 MiB payloads skip there). The
+ * single place the size gate is spelled out, so specs and the gate-logic probe
+ * agree.
+ */
+export const runsFixtureOfSize = (byteLength: number): boolean =>
+  !IS_SLOW_EMULATED_ARCH || byteLength <= MAX_EMULATED_FIXTURE_BYTES
+
+/**
  * An independent C/liblzma oracle (`lzma-native`) for strict footer/end-marker
  * validation and cross-implementation interop. Returns `null` when the addon
  * cannot load — under WASI, or on an arch with no `lzma-native` prebuild (the

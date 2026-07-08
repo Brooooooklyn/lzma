@@ -3,6 +3,7 @@ import { randomBytes } from 'node:crypto'
 import test from 'ava'
 
 import { compress, compressSync, decompress, decompressSync } from '../lzma2'
+import { IS_SLOW_EMULATED_ARCH, MAX_EMULATED_FIXTURE_BYTES } from './helpers'
 
 const STRING_FIXTURE = 'Hello 🚀'
 
@@ -51,13 +52,20 @@ const FIXTURES: Array<{ name: string; data: Buffer }> = [
 ]
 
 for (const { name, data } of FIXTURES) {
-  test(`lzma2 async round-trip: ${name}`, async (t) => {
+  // Fixtures > 4 MiB (the >8MB one) are an HONEST skip on the QEMU-emulated
+  // s390x/ppc64le legs — they exceed ava's timeout under emulation and the failure
+  // is swallowed by `continue-on-error` — while still running on every native arch.
+  const tooBigForEmulated = IS_SLOW_EMULATED_ARCH && data.length > MAX_EMULATED_FIXTURE_BYTES
+  const rt = tooBigForEmulated ? test.skip : test
+  const suffix = tooBigForEmulated ? ' [>4MB: skipped on emulated s390x/ppc64le]' : ''
+
+  rt(`lzma2 async round-trip: ${name}${suffix}`, async (t) => {
     const compressed = await compress(data)
     const output = await decompress(compressed)
     t.deepEqual(Buffer.from(output), data)
   })
 
-  test(`lzma2 sync round-trip: ${name}`, (t) => {
+  rt(`lzma2 sync round-trip: ${name}${suffix}`, (t) => {
     const compressed = compressSync(data)
     const output = decompressSync(compressed)
     t.deepEqual(Buffer.from(output), data)

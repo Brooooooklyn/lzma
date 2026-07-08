@@ -26,6 +26,7 @@ import {
   fromChunks,
   lowEntropyBytes,
   oneShot,
+  IS_SLOW_EMULATED_ARCH,
   type Namespace,
 } from './helpers'
 
@@ -41,6 +42,15 @@ const NATIVE_STREAM = typeof binding.xz?.compressStream === 'function'
 
 // Native present → run; native absent (WASI / a stream-less build) → SKIP.
 const webTest = NATIVE_STREAM ? test : test.skip
+
+// The 10 MB INCOMPRESSIBLE backpressure round-trip (§3) drives > 4 MiB through the
+// native transform and is the slowest case of all. On the QEMU-emulated s390x/ppc64le
+// legs the build IS native (`NATIVE_STREAM` true, so this suite runs there), so
+// without an extra gate it runs under emulation, exceeds ava's timeout, and is
+// swallowed by `continue-on-error`. `bigWebTest` is an HONEST ava skip on the emulated
+// legs; native keeps the full 10 MB coverage. See IS_SLOW_EMULATED_ARCH.
+const bigWebTest = NATIVE_STREAM && !IS_SLOW_EMULATED_ARCH ? test : test.skip
+const EMULATED_SKIP_NOTE = IS_SLOW_EMULATED_ARCH ? ' [>4MB: skipped on emulated s390x/ppc64le]' : ''
 
 const NAMESPACES: readonly Namespace[] = ['lzma', 'lzma2', 'xz']
 
@@ -115,12 +125,15 @@ for (const ns of NAMESPACES) {
 const TEN_MB = deterministicBytes(10 * 1024 * 1024)
 
 for (const ns of NAMESPACES) {
-  webTest(`${ns}: 10 MB random round-trips through the transforms (backpressure)`, async (t) => {
-    const { compressStream, decompressStream } = STREAM[ns]
-    const compressed = await collectStream(compressStream(fromChunks(chunkBySize(TEN_MB, 64 * 1024))))
-    const restored = await collectStream(decompressStream(fromChunks(chunkBySize(compressed, 4096))))
-    t.true(restored.equals(TEN_MB), `${ns}: 10 MB round-trip mismatch`)
-  })
+  bigWebTest(
+    `${ns}: 10 MB random round-trips through the transforms (backpressure)${EMULATED_SKIP_NOTE}`,
+    async (t) => {
+      const { compressStream, decompressStream } = STREAM[ns]
+      const compressed = await collectStream(compressStream(fromChunks(chunkBySize(TEN_MB, 64 * 1024))))
+      const restored = await collectStream(decompressStream(fromChunks(chunkBySize(compressed, 4096))))
+      t.true(restored.equals(TEN_MB), `${ns}: 10 MB round-trip mismatch`)
+    },
+  )
 }
 
 // ── 4) Cross-check decompressStream against an lzma-native-produced stream ────
@@ -256,7 +269,9 @@ webTest('cancellation: input-starved output cancel does not leak the blocking po
     timer = setTimeout(
       () =>
         reject(
-          new Error('runtime starved: health-check round-trip did not complete — blocking pool exhausted by leaked workers'),
+          new Error(
+            'runtime starved: health-check round-trip did not complete — blocking pool exhausted by leaked workers',
+          ),
         ),
       30_000,
     )
