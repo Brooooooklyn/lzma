@@ -10,10 +10,16 @@
 // `require(esm)` returns the namespace; the package engines guarantee it) and adds
 // the inherently Node-only Duplex factory. No logic is duplicated.
 //
-// Load-time browser safety: this module imports NOTHING from `node:*`. The only
-// runtime globals it touches are Web Streams (`ReadableStream`) and `Buffer`
-// (supplied in the browser by the `@napi-rs/wasm-runtime` binding, exactly as the
-// wasm build already relies on for its returned buffers).
+// Load-time AND runtime browser safety: this module imports NOTHING from `node:*`
+// and touches NO Node-only global. The only runtime globals it uses are Web
+// Streams (`ReadableStream`) and typed arrays (`Uint8Array`) — both present in
+// every browser and under `@napi-rs/wasm-runtime`. It deliberately NEVER
+// references `Buffer` (which does NOT exist in a real browser, and which the wasm
+// runtime does not define), so the buffered polyfill below runs in the browser
+// instead of throwing `Buffer is not defined` on the first stream `pull`. Node
+// stays unaffected: on a native build the real transforms are used and this
+// polyfill is never entered; where it is entered its typed-array output is a
+// drop-in for the previous `Buffer` output (`Buffer` IS a `Uint8Array`).
 //
 // On a native build the Rust `compressStream` / `decompressStream` transforms
 // exist on the binding and are used directly. On the wasm build those tokio-
@@ -24,9 +30,32 @@
 // which expose neither — and emit the result as a single-chunk ReadableStream.
 
 /**
- * Drain a Web `ReadableStream<Uint8Array>` fully into a single Buffer. Each
- * chunk is copied (`Buffer.from`) so the result never aliases a reused source
- * buffer.
+ * Concatenate an array of `Uint8Array` chunks into a single `Uint8Array`. Pure
+ * typed arrays (sum lengths → one allocation → `.set` each at its offset) with NO
+ * `Buffer`, so it runs unchanged in a real browser. A lone chunk is returned as-is
+ * (callers pass already-copied chunks, so this never aliases live source memory).
+ */
+function concatChunks(chunks) {
+  if (chunks.length === 1) {
+    return chunks[0]
+  }
+  let total = 0
+  for (const chunk of chunks) {
+    total += chunk.length
+  }
+  const out = new Uint8Array(total)
+  let offset = 0
+  for (const chunk of chunks) {
+    out.set(chunk, offset)
+    offset += chunk.length
+  }
+  return out
+}
+
+/**
+ * Drain a Web `ReadableStream<Uint8Array>` fully into a single `Uint8Array`. Each
+ * chunk is copied (`new Uint8Array(chunk)`) so the result never aliases a reused
+ * source buffer (and is a plain, non-shared typed array). Buffer-free.
  */
 export async function bufferAll(input) {
   const reader = input.getReader()
@@ -36,7 +65,7 @@ export async function bufferAll(input) {
       const { done, value } = await reader.read()
       if (done) break
       if (value && value.length) {
-        chunks.push(Buffer.from(value))
+        chunks.push(new Uint8Array(value))
       }
     }
   } finally {
@@ -46,14 +75,14 @@ export async function bufferAll(input) {
       // Best-effort: an already-released/closed reader is fine.
     }
   }
-  return chunks.length === 1 ? chunks[0] : Buffer.concat(chunks)
+  return concatChunks(chunks)
 }
 
 /**
- * Wrap an async `() => Promise<Buffer>` producer as a single-chunk
- * `ReadableStream`. The whole payload is produced on the first `pull`; a
- * producer rejection errors the stream (parity with the native transform, which
- * errors rather than truncating).
+ * Wrap an async `() => Promise<Uint8Array>` producer as a single-chunk
+ * `ReadableStream`. The whole payload is produced on the first `pull` and enqueued
+ * as a `Uint8Array` (never a `Buffer`); a producer rejection errors the stream
+ * (parity with the native transform, which errors rather than truncating).
  */
 export function singleChunkStream(produce) {
   let emitted = false
@@ -93,9 +122,11 @@ export function createStreamApi({ nativeCompressStream, nativeDecompressStream, 
       : (input, options) =>
           singleChunkStream(async () => {
             const compressor = new Compressor(options)
-            const head = Buffer.from(await compressor.update(await bufferAll(input)))
-            const tail = Buffer.from(await compressor.finish())
-            return head.length ? (tail.length ? Buffer.concat([head, tail]) : head) : tail
+            // Copy each codec output into a plain, non-shared `Uint8Array` (drops
+            // `Buffer`-ness and any SharedArrayBuffer backing `enqueue` rejects).
+            const head = new Uint8Array(await compressor.update(await bufferAll(input)))
+            const tail = new Uint8Array(await compressor.finish())
+            return head.length ? (tail.length ? concatChunks([head, tail]) : head) : tail
           })
 
   const decompressStream =
@@ -104,9 +135,11 @@ export function createStreamApi({ nativeCompressStream, nativeDecompressStream, 
       : (input, options) =>
           singleChunkStream(async () => {
             const decompressor = new Decompressor(options)
-            const head = Buffer.from(await decompressor.update(await bufferAll(input)))
-            const tail = Buffer.from(await decompressor.finish())
-            return head.length ? (tail.length ? Buffer.concat([head, tail]) : head) : tail
+            // Copy each codec output into a plain, non-shared `Uint8Array` (drops
+            // `Buffer`-ness and any SharedArrayBuffer backing `enqueue` rejects).
+            const head = new Uint8Array(await decompressor.update(await bufferAll(input)))
+            const tail = new Uint8Array(await decompressor.finish())
+            return head.length ? (tail.length ? concatChunks([head, tail]) : head) : tail
           })
 
   return { compressStream, decompressStream }

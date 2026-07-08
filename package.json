@@ -49,12 +49,15 @@
     "xz.js",
     "xz.d.ts",
     "xz.browser.js",
+    "xz.browser.d.ts",
     "lzma.js",
     "lzma.d.ts",
     "lzma.browser.js",
+    "lzma.browser.d.ts",
     "lzma2.js",
     "lzma2.d.ts",
     "lzma2.browser.js",
+    "lzma2.browser.d.ts",
     "stream-polyfill.js",
     "stream-polyfill.mjs",
     "browser-entry.js"
@@ -130,20 +133,29 @@
       "require": "./main.js"
     },
     "./xz": {
+      "browser": {
+        "types": "./xz.browser.d.ts",
+        "import": "./xz.browser.js"
+      },
       "types": "./xz.d.ts",
-      "browser": "./xz.browser.js",
       "import": "./xz.js",
       "require": "./xz.js"
     },
     "./lzma": {
+      "browser": {
+        "types": "./lzma.browser.d.ts",
+        "import": "./lzma.browser.js"
+      },
       "types": "./lzma.d.ts",
-      "browser": "./lzma.browser.js",
       "import": "./lzma.js",
       "require": "./lzma.js"
     },
     "./lzma2": {
+      "browser": {
+        "types": "./lzma2.browser.d.ts",
+        "import": "./lzma2.browser.js"
+      },
       "types": "./lzma2.d.ts",
-      "browser": "./lzma2.browser.js",
       "import": "./lzma2.js",
       "require": "./lzma2.js"
     }
