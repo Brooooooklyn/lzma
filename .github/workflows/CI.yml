@@ -63,7 +63,13 @@ jobs:
           - host: windows-latest
             build: |
               yarn build --target i686-pc-windows-msvc
-              yarn test
+              # --serial: 32-bit x86 has a ~2-4 GiB, easily fragmented address
+              # space, and every preset-6 compressor allocates a single ~64 MiB
+              # BT4 match-finder tree. Running tests concurrently keeps many such
+              # encoders live at once and Rust aborts on an allocation failure
+              # (uncatchable). Serial execution caps it at ~one 64 MiB encoder at
+              # a time — the known-good single-compress footprint.
+              yarn test --serial
             target: i686-pc-windows-msvc
           - host: ubuntu-latest
             target: x86_64-unknown-linux-gnu

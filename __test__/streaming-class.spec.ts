@@ -1,6 +1,6 @@
 import { createRequire } from 'node:module'
 
-import avaTest from 'ava'
+import test from 'ava'
 
 import {
   awkwardChunks,
@@ -25,17 +25,6 @@ import {
 const requireFrom = createRequire(import.meta.url)
 
 const IS_WASI = !!process.env.NAPI_RS_FORCE_WASI
-
-// On the 32-bit i686 leg (`IS_32BIT`) every preset-6 compressor allocates a
-// single ~64 MiB BT4 tree (dict-driven, not input-driven), and ava runs this
-// file's tests concurrently, so many live encoders at once exhaust the fragmented
-// 32-bit address space and Rust ABORTS the process (uncatchable OOM). Rebinding
-// the whole file's `test` to ava's SERIAL runner there caps it at one 64 MiB
-// encoder live at a time — the known-good single-compress footprint. On 64-bit
-// this is a no-op alias (full concurrent coverage). Every registration below
-// (including the `classTest` / `bigClassTest` / `strictTest` gates and their
-// `.skip` variants) derives from this binding. See IS_32BIT in ./helpers.
-const test = IS_32BIT ? avaTest.serial : avaTest
 
 // The COMPRESSOR classes build tokio-free and run fine under emnapi/WASI (they
 // use an `AsyncTask`, not a persistent worker thread). The pull-based
@@ -590,11 +579,11 @@ classTest('concurrency: many simultaneous Decompressors all round-trip (async po
   // `INPUT` is constant, so there are only THREE distinct compressed streams (one
   // per namespace). Pre-compress each ONCE and reuse. Do it SEQUENTIALLY: the
   // one-shot `compress` is async native work on the libuv pool, so a `Promise.all`
-  // here would run all three ~64 MiB BT4 encoders concurrently — the very pile-up
-  // this probe must avoid on 32-bit (rebinding `test` to serial only serialises
-  // test CASES, not async work launched inside one). At most one encoder is live
-  // at a time. Only the DECODER fan-out below is meant to be concurrent — that is
-  // what this probe actually exercises.
+  // here would run all three ~64 MiB BT4 encoders (see IS_32BIT) concurrently
+  // WITHIN this single test — a pile-up the 32-bit CI leg's `ava --serial` cannot
+  // prevent (it only serialises whole test CASES, not async work launched inside
+  // one). Awaiting each keeps at most one encoder live at a time. Only the DECODER
+  // fan-out below is meant to be concurrent — that is what this probe exercises.
   const compressedByNs = {} as Record<Namespace, Buffer>
   for (const ns of NAMESPACES) {
     compressedByNs[ns] = Buffer.from(await oneShot(ns).compress(INPUT))

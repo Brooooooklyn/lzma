@@ -106,14 +106,16 @@ export const runsFixtureOfSize = (byteLength: number): boolean =>
  * `i32`s at the pinned 8 MiB dictionary, i.e. independent of the INPUT size
  * (verified against `lzma_rust2` 0.15.8 `lz/bt4.rs`). A 64-bit process satisfies
  * that trivially, but a 32-bit process has only a ~2-4 GiB, easily fragmented
- * virtual address space. Because ava runs a file's tests CONCURRENTLY, many such
- * encoders can be live at once; the address space then cannot hand out a fresh
- * 64 MiB contiguous region and Rust ABORTS the whole process (an uncatchable
- * allocation failure, not a throwable error). A single compress is fine — it is
- * only the concurrency that exhausts the space — so the compress-heavy class spec
- * SERIALISES on this arch (at most one 64 MiB encoder live at a time, the
- * known-good single-compress footprint) and the concurrency probe shrinks its
- * fan-out here. Native 64-bit legs keep full concurrent coverage.
+ * virtual address space. Because ava runs tests (and files) CONCURRENTLY, many
+ * such encoders can be live at once; the address space then cannot hand out a
+ * fresh 64 MiB contiguous region and Rust ABORTS the whole process (an
+ * uncatchable allocation failure, not a throwable error). A single compress is
+ * fine — it is only the concurrency that exhausts the space — so the 32-bit CI
+ * leg runs the suite with `ava --serial` (one test, hence ~one 64 MiB encoder,
+ * live at a time — the known-good single-compress footprint). This flag is for
+ * the residual WITHIN-a-single-test fan-outs that `--serial` cannot bound: the
+ * streaming-class concurrency probe uses it to shrink its concurrent-decoder
+ * count here. Native 64-bit legs keep full concurrent coverage.
  */
 export const IS_32BIT = process.arch === 'ia32'
 
