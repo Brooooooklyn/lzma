@@ -360,7 +360,11 @@ jobs:
         with:
           image: ${{ steps.docker.outputs.IMAGE }}
           options: -v ${{ github.workspace }}:${{ github.workspace }} -w ${{ github.workspace }} --platform ${{ steps.docker.outputs.PLATFORM }}
-          run: npm run test
+          # armv7 is the only 32-bit target here: a preset-6 compressor needs a
+          # single ~64 MiB BT4 tree and the fragmented 32-bit address space
+          # OOM-aborts (uncatchable) under concurrent tests, so run it serial
+          # (~one such encoder live at a time). 64-bit targets stay parallel.
+          run: npm run test ${{ contains(matrix.target, 'armv7') && '-- --serial' || '' }}
 
   publish:
     name: Publish

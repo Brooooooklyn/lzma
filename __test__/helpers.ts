@@ -98,8 +98,9 @@ export const runsFixtureOfSize = (byteLength: number): boolean =>
   !IS_SLOW_EMULATED_ARCH || byteLength <= MAX_EMULATED_FIXTURE_BYTES
 
 /**
- * True on a 32-bit x86 runtime — the `i686-pc-windows-msvc` CI leg, where node
- * reports `process.arch === 'ia32'`.
+ * True on a 32-bit runtime — the `i686-pc-windows-msvc` CI leg (node
+ * `process.arch === 'ia32'`) and the QEMU-emulated `armv7-unknown-linux-gnueabihf`
+ * leg (node `process.arch === 'arm'`; 64-bit ARM is `'arm64'`, which is excluded).
  *
  * Every preset-6 compressor `lzma_rust2` builds allocates a single ~64 MiB
  * contiguous `Vec<i32>` for the BT4 match-finder tree — `(dict_size + 1) * 2`
@@ -117,7 +118,7 @@ export const runsFixtureOfSize = (byteLength: number): boolean =>
  * streaming-class concurrency probe uses it to shrink its concurrent-decoder
  * count here. Native 64-bit legs keep full concurrent coverage.
  */
-export const IS_32BIT = process.arch === 'ia32'
+export const IS_32BIT = process.arch === 'ia32' || process.arch === 'arm'
 
 /**
  * An independent C/liblzma oracle (`lzma-native`) for strict footer/end-marker
