@@ -584,14 +584,11 @@ classTest('concurrency: many simultaneous Decompressors all round-trip (async po
   // prevent (it only serialises whole test CASES, not async work launched inside
   // one). Awaiting each keeps at most one encoder live at a time. Only the DECODER
   // fan-out below is meant to be concurrent — that is what this probe exercises.
-  const compressedByNs = {} as Record<Namespace, Buffer>
+  const streams: { ns: Namespace; compressed: Buffer }[] = []
   for (const ns of NAMESPACES) {
-    compressedByNs[ns] = Buffer.from(await oneShot(ns).compress(INPUT))
+    streams.push({ ns, compressed: Buffer.from(await oneShot(ns).compress(INPUT)) })
   }
-  const jobs = Array.from({ length: N }, (_unused, i) => {
-    const ns = NAMESPACES[i % NAMESPACES.length]
-    return { ns, compressed: compressedByNs[ns] }
-  })
+  const jobs = Array.from({ length: N }, (_unused, i) => streams[i % streams.length])
   // Launch every decompressor at once (each `driveClassDecompress` constructs its
   // Decompressor and synchronously feeds all chunks before returning its
   // finish() promise), then await them together — peak = N live workers.

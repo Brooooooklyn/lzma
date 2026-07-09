@@ -63,12 +63,8 @@ jobs:
           - host: windows-latest
             build: |
               yarn build --target i686-pc-windows-msvc
-              # --serial: 32-bit x86 has a ~2-4 GiB, easily fragmented address
-              # space, and every preset-6 compressor allocates a single ~64 MiB
-              # BT4 match-finder tree. Running tests concurrently keeps many such
-              # encoders live at once and Rust aborts on an allocation failure
-              # (uncatchable). Serial execution caps it at ~one 64 MiB encoder at
-              # a time — the known-good single-compress footprint.
+              # 32-bit leg: --serial avoids the concurrent ~64 MiB BT4 encoder
+              # OOM-abort. Full rationale: __test__/helpers.ts IS_32BIT.
               yarn test --serial
             target: i686-pc-windows-msvc
           - host: ubuntu-latest
@@ -360,10 +356,8 @@ jobs:
         with:
           image: ${{ steps.docker.outputs.IMAGE }}
           options: -v ${{ github.workspace }}:${{ github.workspace }} -w ${{ github.workspace }} --platform ${{ steps.docker.outputs.PLATFORM }}
-          # armv7 is the only 32-bit target here: a preset-6 compressor needs a
-          # single ~64 MiB BT4 tree and the fragmented 32-bit address space
-          # OOM-aborts (uncatchable) under concurrent tests, so run it serial
-          # (~one such encoder live at a time). 64-bit targets stay parallel.
+          # armv7 is the only 32-bit target here → run it --serial to avoid the
+          # concurrent ~64 MiB BT4 encoder OOM-abort (see __test__/helpers.ts IS_32BIT).
           run: npm run test ${{ contains(matrix.target, 'armv7') && '-- --serial' || '' }}
 
   publish:

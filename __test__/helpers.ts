@@ -112,11 +112,14 @@ export const runsFixtureOfSize = (byteLength: number): boolean =>
  * fresh 64 MiB contiguous region and Rust ABORTS the whole process (an
  * uncatchable allocation failure, not a throwable error). A single compress is
  * fine — it is only the concurrency that exhausts the space — so the 32-bit CI
- * leg runs the suite with `ava --serial` (one test, hence ~one 64 MiB encoder,
- * live at a time — the known-good single-compress footprint). This flag is for
- * the residual WITHIN-a-single-test fan-outs that `--serial` cannot bound: the
+ * legs run the suite with `ava --serial` (one test, hence ~one 64 MiB encoder,
+ * live at a time — the known-good single-compress footprint). That is wired in
+ * `.github/workflows/CI.yml` at BOTH 32-bit legs — the `i686-pc-windows-msvc`
+ * inline build step and the `armv7` `test-linux-binding` step — so a NEW 32-bit
+ * test leg must add `--serial` there too. This `IS_32BIT` flag itself is for the
+ * residual WITHIN-a-single-test fan-outs that `--serial` cannot bound: the
  * streaming-class concurrency probe uses it to shrink its concurrent-decoder
- * count here. Native 64-bit legs keep full concurrent coverage.
+ * count. Native 64-bit legs keep full concurrent coverage.
  */
 export const IS_32BIT = process.arch === 'ia32' || process.arch === 'arm'
 
