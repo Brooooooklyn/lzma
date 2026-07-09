@@ -98,6 +98,26 @@ export const runsFixtureOfSize = (byteLength: number): boolean =>
   !IS_SLOW_EMULATED_ARCH || byteLength <= MAX_EMULATED_FIXTURE_BYTES
 
 /**
+ * True on a 32-bit x86 runtime — the `i686-pc-windows-msvc` CI leg, where node
+ * reports `process.arch === 'ia32'`.
+ *
+ * Every preset-6 compressor `lzma_rust2` builds allocates a single ~64 MiB
+ * contiguous `Vec<i32>` for the BT4 match-finder tree — `(dict_size + 1) * 2`
+ * `i32`s at the pinned 8 MiB dictionary, i.e. independent of the INPUT size
+ * (verified against `lzma_rust2` 0.15.8 `lz/bt4.rs`). A 64-bit process satisfies
+ * that trivially, but a 32-bit process has only a ~2-4 GiB, easily fragmented
+ * virtual address space. Because ava runs a file's tests CONCURRENTLY, many such
+ * encoders can be live at once; the address space then cannot hand out a fresh
+ * 64 MiB contiguous region and Rust ABORTS the whole process (an uncatchable
+ * allocation failure, not a throwable error). A single compress is fine — it is
+ * only the concurrency that exhausts the space — so the compress-heavy class spec
+ * SERIALISES on this arch (at most one 64 MiB encoder live at a time, the
+ * known-good single-compress footprint) and the concurrency probe shrinks its
+ * fan-out here. Native 64-bit legs keep full concurrent coverage.
+ */
+export const IS_32BIT = process.arch === 'ia32'
+
+/**
  * An independent C/liblzma oracle (`lzma-native`) for strict footer/end-marker
  * validation and cross-implementation interop. Returns `null` when the addon
  * cannot load — under WASI, or on an arch with no `lzma-native` prebuild (the

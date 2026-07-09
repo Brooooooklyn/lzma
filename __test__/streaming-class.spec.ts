@@ -1,6 +1,6 @@
 import { createRequire } from 'node:module'
 
-import test from 'ava'
+import avaTest from 'ava'
 
 import {
   awkwardChunks,
@@ -12,6 +12,7 @@ import {
   loadDecompressor,
   lowEntropyBytes,
   oneShot,
+  IS_32BIT,
   IS_SLOW_EMULATED_ARCH,
   SUPPORTS_STREAMING_WASI,
   type CompressorInstance,
@@ -24,6 +25,17 @@ import {
 const requireFrom = createRequire(import.meta.url)
 
 const IS_WASI = !!process.env.NAPI_RS_FORCE_WASI
+
+// On the 32-bit i686 leg (`IS_32BIT`) every preset-6 compressor allocates a
+// single ~64 MiB BT4 tree (dict-driven, not input-driven), and ava runs this
+// file's tests concurrently, so many live encoders at once exhaust the fragmented
+// 32-bit address space and Rust ABORTS the process (uncatchable OOM). Rebinding
+// the whole file's `test` to ava's SERIAL runner there caps it at one 64 MiB
+// encoder live at a time — the known-good single-compress footprint. On 64-bit
+// this is a no-op alias (full concurrent coverage). Every registration below
+// (including the `classTest` / `bigClassTest` / `strictTest` gates and their
+// `.skip` variants) derives from this binding. See IS_32BIT in ./helpers.
+const test = IS_32BIT ? avaTest.serial : avaTest
 
 // The COMPRESSOR classes build tokio-free and run fine under emnapi/WASI (they
 // use an `AsyncTask`, not a persistent worker thread). The pull-based
@@ -571,17 +583,26 @@ for (const ns of NAMESPACES) {
 // `classTest` (SUPPORTS_STREAMING_WASI stays false) — the coordination signal
 // that steers wasm decompress users to the one-shot API / buffered polyfill.
 classTest('concurrency: many simultaneous Decompressors all round-trip (async pool not starved)', async (t) => {
-  const N = 32
-  // Pre-compress so the launch below is pure decoder construction — no async gap
-  // between spawning workers, maximising simultaneity.
-  const jobs = await Promise.all(
-    Array.from({ length: N }, (_unused, i) => {
-      const ns = NAMESPACES[i % NAMESPACES.length]
-      return oneShot(ns)
-        .compress(INPUT)
-        .then((compressed) => ({ ns, compressed: Buffer.from(compressed) }))
-    }),
-  )
+  // 32 concurrent decoders on 64-bit. On the 32-bit leg fewer: 32 decoder worker
+  // THREADS plus 32 live 8 MiB dictionaries would themselves strain the address
+  // space, and the probe still demonstrates a non-starved pool with a smaller N.
+  const N = IS_32BIT ? 8 : 32
+  // `INPUT` is constant, so there are only THREE distinct compressed streams (one
+  // per namespace). Pre-compress each ONCE and reuse. Do it SEQUENTIALLY: the
+  // one-shot `compress` is async native work on the libuv pool, so a `Promise.all`
+  // here would run all three ~64 MiB BT4 encoders concurrently — the very pile-up
+  // this probe must avoid on 32-bit (rebinding `test` to serial only serialises
+  // test CASES, not async work launched inside one). At most one encoder is live
+  // at a time. Only the DECODER fan-out below is meant to be concurrent — that is
+  // what this probe actually exercises.
+  const compressedByNs = {} as Record<Namespace, Buffer>
+  for (const ns of NAMESPACES) {
+    compressedByNs[ns] = Buffer.from(await oneShot(ns).compress(INPUT))
+  }
+  const jobs = Array.from({ length: N }, (_unused, i) => {
+    const ns = NAMESPACES[i % NAMESPACES.length]
+    return { ns, compressed: compressedByNs[ns] }
+  })
   // Launch every decompressor at once (each `driveClassDecompress` constructs its
   // Decompressor and synchronously feeds all chunks before returning its
   // finish() promise), then await them together — peak = N live workers.
