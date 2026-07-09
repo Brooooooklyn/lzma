@@ -508,6 +508,12 @@ if (!nativeBinding) {
 }
 
 module.exports = nativeBinding
+module.exports.Lzma2Compressor = nativeBinding.Lzma2Compressor
+module.exports.Lzma2Decompressor = nativeBinding.Lzma2Decompressor
+module.exports.LzmaCompressor = nativeBinding.LzmaCompressor
+module.exports.LzmaDecompressor = nativeBinding.LzmaDecompressor
+module.exports.XzCompressor = nativeBinding.XzCompressor
+module.exports.XzDecompressor = nativeBinding.XzDecompressor
 module.exports.lzma = nativeBinding.lzma
 module.exports.lzma2 = nativeBinding.lzma2
 module.exports.xz = nativeBinding.xz

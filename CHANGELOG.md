@@ -1,3 +1,24 @@
+## Unreleased
+
+
+### Features
+
+* **streaming:** add an incremental streaming API for `xz`, `lzma`, and `lzma2` — `Compressor` / `Decompressor` classes (`update()` / `finish()`), a WHATWG Web Streams `compressStream` / `decompressStream` per namespace, and Node `Duplex` `createCompressStream` / `createDecompressStream` convenience factories. The one-shot API is unchanged; the new surface is purely additive. Under wasm/browser the Web Streams API falls back to a buffered polyfill (the incremental class decode stays native).
+* **backend:** swap the compression backend from `lzma-rs` to the pure-Rust `lzma-rust2` crate. The one-shot API behavior is unchanged and the output remains standard, liblzma-compatible `.xz` / `.lzma`.
+
+
+### Notes
+
+* **lzma2 dictionary:** raw LZMA2 carries no dictionary size in-band, so it uses a fixed 8 MiB dictionary by default. Override it via a symmetric `{ dictSize }` on both the compressor and the decompressor — they must agree. A decoder configured with a mismatched (smaller) dictionary fails cleanly with an `InvalidArg` error; it never silently corrupts the output.
+* **stream trailer:** the `lzma` / `lzma2` stream decoders complete at the in-band end marker and ignore any trailing bytes after a complete frame (as with the one-shot API), while `xz` validates its framed trailer.
+
+
+### Known Limitations
+
+* Cancelling a Web `compressStream` / `decompressStream` output while a `read()` is still pending on a stalled or never-ending input can leak one worker thread until the process exits. Normal cancels — before reading, after data has flowed, or on any finite input — are unaffected. (Root cause: napi's stream cancel cannot interrupt a pull already in flight; a full fix needs an upstream napi cancel hook.)
+
+
+
 ## [1.4.5](https://github.com/Brooooooklyn/lzma/compare/v1.4.4...v1.4.5) (2025-08-10)
 
 
