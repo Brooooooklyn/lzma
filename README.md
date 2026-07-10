@@ -16,21 +16,85 @@ yarn add @napi-rs/lzma
 
 ## Support matrix
 
-|                       | node14 | node16 | node18 | node20 |
-| --------------------- | ------ | ------ | ------ | ------ |
-| Windows x64           | ✓      | ✓      | ✓      | ✓      |
-| Windows x32           | ✓      | ✓      | ✓      | ✓      |
-| Windows arm64         | ✓      | ✓      | ✓      | ✓      |
-| macOS x64             | ✓      | ✓      | ✓      | ✓      |
-| macOS arm64 (m chips) | ✓      | ✓      | ✓      | ✓      |
-| Linux x64 gnu         | ✓      | ✓      | ✓      | ✓      |
-| Linux x64 musl        | ✓      | ✓      | ✓      | ✓      |
-| Linux arm gnu         | ✓      | ✓      | ✓      | ✓      |
-| Linux arm64 gnu       | ✓      | ✓      | ✓      | ✓      |
-| Linux arm64 musl      | ✓      | ✓      | ✓      | ✓      |
-| Android arm64         | ✓      | ✓      | ✓      | ✓      |
-| Android armv7         | ✓      | ✓      | ✓      | ✓      |
-| FreeBSD x64           | ✓      | ✓      | ✓      | ✓      |
+<!-- Absolute raw URLs, not relative paths: npmjs.com rewrites <img src> to
+     raw.githubusercontent.com but does NOT rewrite <source srcset>, so a relative
+     srcset 404s on npm for every dark-mode visitor. -->
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Brooooooklyn/lzma/HEAD/assets/support-node-dark.svg">
+  <img alt="Node.js — v22.20 to v26. engines is ^22.20 || ^24.12 || >=25; Node 23 and 24.0–24.11 are excluded. CI tests 22 and 24; 26 is supported but not in the CI matrix." src="https://raw.githubusercontent.com/Brooooooklyn/lzma/HEAD/assets/support-node-light.svg">
+</picture>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Brooooooklyn/lzma/HEAD/assets/support-platforms-dark.svg">
+  <img alt="Platforms — 16 prebuilt native targets. CI-tested: Linux x64 gnu and musl, Linux arm64 gnu and musl, Linux armv7 gnu, Windows x64, arm64 and x32, macOS x64 and arm64, FreeBSD x64. Non-blocking: Linux ppc64le and s390x. Built but untested: Linux riscv64, Android arm64 and armv7." src="https://raw.githubusercontent.com/Brooooooklyn/lzma/HEAD/assets/support-platforms-light.svg">
+</picture>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Brooooooklyn/lzma/HEAD/assets/support-browser-dark.svg">
+  <img alt="Browser — ships as wasm32-wasi, picked up by bundlers via the browser export condition. Requires cross-origin isolation (COOP + COEP) for SharedArrayBuffer." src="https://raw.githubusercontent.com/Brooooooklyn/lzma/HEAD/assets/support-browser-light.svg">
+</picture>
+
+<details>
+<summary>Full matrix as text</summary>
+
+### Node.js
+
+`engines.node` is `^22.20 || ^24.12 || >=25` — a deliberately non-contiguous range:
+
+| Range            | Supported | Note                                          |
+| ---------------- | --------- | --------------------------------------------- |
+| `< 22.20`        | no        |                                               |
+| `22.20` – `22.x` | yes       | tested in CI                                  |
+| `23.x`           | no        | reached end-of-life 2025-06-01                |
+| `24.0` – `24.11` | no        |                                               |
+| `24.12` – `24.x` | yes       | tested in CI                                  |
+| `25.x`           | yes       | permitted, but reached end-of-life 2026-06-01 |
+| `26` and later   | yes       | not in the CI matrix                          |
+
+Release-line status as of 2026-07-10: 22 is Maintenance LTS, 24 is Active LTS, 26 is Current.
+
+**Why these exact cutoffs?** They are a support policy, not a technical limit. The only hard
+floor in the shipped code is **Node 22.12**, where `require(esm)` became unflagged — `main.js`
+loads `stream-polyfill.mjs` with `require`. The native binding itself asks for nothing newer
+than Node-API 5. The `^22.20 || ^24.12 || >=25` range was inherited from the test toolchain
+(`ava` declares `^22.20 || ^24.12 || >=26`) and predates the `require(esm)` code by two months.
+Node 23 and 24.0–24.11 are dropped by policy; the code runs on them.
+
+### Targets
+
+| Rust triple                     | Platform             | CI                                 |
+| ------------------------------- | -------------------- | ---------------------------------- |
+| `x86_64-pc-windows-msvc`        | Windows x64          | tested — node 22, 24               |
+| `aarch64-pc-windows-msvc`       | Windows arm64        | tested — node 22, 24               |
+| `i686-pc-windows-msvc`          | Windows x32          | tested — node 22 (x86), `--serial` |
+| `x86_64-apple-darwin`           | macOS x64            | tested — node 22, 24               |
+| `aarch64-apple-darwin`          | macOS arm64          | tested — node 22, 24               |
+| `x86_64-unknown-linux-gnu`      | Linux x64 gnu        | tested — node 22, 24               |
+| `x86_64-unknown-linux-musl`     | Linux x64 musl       | tested — node 22, 24               |
+| `aarch64-unknown-linux-gnu`     | Linux arm64 gnu      | tested — node 22, 24               |
+| `aarch64-unknown-linux-musl`    | Linux arm64 musl     | tested — node 22, 24               |
+| `armv7-unknown-linux-gnueabihf` | Linux armv7 gnu      | tested — node 22 only, `--serial`  |
+| `x86_64-unknown-freebsd`        | FreeBSD x64          | tested — node version unpinned     |
+| `powerpc64le-unknown-linux-gnu` | Linux ppc64le        | non-blocking (`continue-on-error`) |
+| `s390x-unknown-linux-gnu`       | Linux s390x          | non-blocking (`continue-on-error`) |
+| `riscv64gc-unknown-linux-gnu`   | Linux riscv64        | built, not tested                  |
+| `aarch64-linux-android`         | Android arm64        | built, not tested                  |
+| `arm-linux-androideabi`         | Android armv7        | built, not tested                  |
+| `wasm32-wasi-preview1-threads`  | wasm32-wasi, browser | built, not tested                  |
+
+Seventeen targets: eleven CI-tested, two non-blocking, four built but not exercised.
+
+### Browser
+
+Bundlers resolve `@napi-rs/lzma-wasm32-wasi` through the `browser` export condition. The wasm
+build allocates shared memory and spawns worker threads, so `SharedArrayBuffer` must be
+available — the page has to be
+[cross-origin isolated](https://developer.mozilla.org/docs/Web/API/Window/crossOriginIsolated),
+served with `Cross-Origin-Opener-Policy: same-origin` and
+`Cross-Origin-Embedder-Policy: require-corp`.
+
+</details>
 
 ## API
 
