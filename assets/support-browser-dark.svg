@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="236" viewBox="0 0 880 236" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">Browser support</title><desc id="d">Ships as wasm32-wasi. Bundlers pick the wasm build via the browser export condition. Not covered by CI. Requires cross-origin isolation, COOP same-origin plus COEP require-corp, for SharedArrayBuffer.</desc>
+<defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#0d1117"/><stop offset="1" stop-color="#10151c"/>
+</linearGradient></defs>
+<rect x="0.75" y="0.75" width="878.5" height="234.5" rx="14" fill="url(#bg)" stroke="#30363d"/>
+<text x="32" y="44" font-size="15" font-weight="600" fill="#e6edf3">Browser</text>
+<circle cx="45" cy="94" r="12.5" fill="none" stroke="#8b949e" stroke-width="2"/><path d="M39.4 94.2 l3.9 4.0 l7.3 -8.2" fill="none" stroke="#8b949e" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="72" y="103" font-size="24" font-weight="700" fill="#e6edf3">wasm32-wasi</text>
+<text x="72" y="127" font-size="13" fill="#8b949e">Bundlers pick the wasm build via the browser export condition.</text>
+<rect x="72.0" y="146" width="99.5" height="26" rx="13" fill="rgba(139,148,158,0.12)" stroke="#30363d"/><text x="121.8" y="163.5" font-size="12.5" font-weight="500" fill="#8b949e" text-anchor="middle" textLength="73.5" lengthAdjust="spacing">wasm32-wasi</text>
+<line x1="32" y1="188" x2="848" y2="188" stroke="#30363d"/>
+<path d="M39 203 L46 215.5 L32 215.5 Z" fill="none" stroke="#d29922" stroke-width="1.6" stroke-linejoin="round"/><path d="M39 207.6 L39 210.8" stroke="#d29922" stroke-width="1.6" stroke-linecap="round"/><circle cx="39" cy="213.2" r="0.85" fill="#d29922"/>
+<text x="56" y="213" font-size="13" fill="#d29922">Requires cross-origin isolation (COOP + COEP) for SharedArrayBuffer.</text>
+</svg>
