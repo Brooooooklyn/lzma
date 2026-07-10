@@ -19,8 +19,45 @@ env:
   pull_request: null
 
 jobs:
+  # Supply-chain gate: audit every lifecycle script in the lockfile before any
+  # other job runs. Every job below `needs: audit`, so nothing installs deps or
+  # runs until the audit is clean. Backstops `npmMinimalAgeGate: 0` in .yarnrc.yml,
+  # which disables yarn's publish-age delay. The committed .script-jail.lock.yml is
+  # Docker-produced + linux/x64-spoofed, so the backend/spoof must match here.
+  audit:
+    name: Audit lifecycle scripts (script-jail)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: script-jail audit (enforce committed lock)
+        uses: Brooooooklyn/script-jail@v0.2.10
+        with:
+          mode: check
+          backend: docker
+          spoof-platform: linux
+          spoof-arch: x64
+
+      - name: Upload regenerated lock on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: script-jail-lock
+          # .script-jail.* are dotfiles; upload-artifact skips hidden files by default.
+          include-hidden-files: true
+          path: |
+            .script-jail.lock.yml
+            .script-jail.yml
   lint:
     name: Lint
+    needs: audit
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -50,6 +87,7 @@ jobs:
       - name: Clippy
         run: cargo clippy
   build:
+    needs: audit
     strategy:
       fail-fast: false
       matrix:
@@ -185,6 +223,7 @@ jobs:
             ${{ env.APP_NAME }}.*.wasm
           if-no-files-found: error
   build-freebsd:
+    needs: audit
     runs-on: ubuntu-latest
     name: Build FreeBSD
     steps:
@@ -234,6 +273,7 @@ jobs:
   test-macOS-windows-binding:
     name: Test bindings on ${{ matrix.settings.target }} - node@${{ matrix.node }}
     needs:
+      - audit
       - build
     strategy:
       fail-fast: false
@@ -283,6 +323,7 @@ jobs:
   test-linux-binding:
     name: Test ${{ matrix.target }} - node@${{ matrix.node }}
     needs:
+      - audit
       - build
     strategy:
       fail-fast: false
@@ -367,6 +408,7 @@ jobs:
       contents: write
       id-token: write
     needs:
+      - audit
       - lint
       - build-freebsd
       - test-macOS-windows-binding

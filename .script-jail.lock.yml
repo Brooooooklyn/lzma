@@ -1,0 +1,6 @@
+schema_version: 1
+manager: yarn
+manager_lockfile_sha256: ""
+node_version: 24.15.0
+generated_at: 2026-07-10T07:33:02.111Z
+packages: {}
