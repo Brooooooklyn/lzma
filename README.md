@@ -22,7 +22,7 @@ yarn add @napi-rs/lzma
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Brooooooklyn/lzma/HEAD/assets/support-node-dark.svg">
-  <img alt="Node.js — v22.20 to v26. engines is ^22.20 || ^24.12 || >=25; Node 23 and 24.0–24.11 are excluded. CI tests 22 and 24; 26 is supported but not in the CI matrix." src="https://raw.githubusercontent.com/Brooooooklyn/lzma/HEAD/assets/support-node-light.svg">
+  <img alt="Node.js support: v22.20 to v26. Node 23 and 24.0 to 24.11 are excluded. CI tests 22 and 24; 26 is supported but not in the CI matrix." src="https://raw.githubusercontent.com/Brooooooklyn/lzma/HEAD/assets/support-node-light.svg">
 </picture>
 
 <picture>
