@@ -34,11 +34,13 @@ by an accessible text fallback, and correct every factual claim in the process.
 | ------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | -------------------------------------- |
 | `style` / `class` attrs, `<style>` blocks in README           | stripped by GitHub's sanitizer                                                               | cards cannot be raw HTML               |
 | inline `<svg>…</svg>` in README                               | stripped                                                                                     | must reference a committed `.svg` file |
-| `<img src="./x.svg">` on a committed SVG                      | served **verbatim**; gradients, internal `<style>`, `rx`, `<text>` all preserved             | this is the mechanism                  |
+| `<img src="…x.svg">` on a committed SVG                       | served **verbatim**; gradients, internal `<style>`, `rx`, `<text>` all preserved             | this is the mechanism                  |
 | self-theming SVG via internal `@media (prefers-color-scheme)` | keys off the **OS**, not GitHub's theme toggle                                               | unusable; needs two files              |
-| `<picture>` + `prefers-color-scheme`                          | GA on GitHub since 2022-08-15; also honored by npmjs.com                                     | this is the theming mechanism          |
+| `<picture>` + `prefers-color-scheme`                          | GA on GitHub since 2022-08-15; the element survives npm's sanitizer too                      | this is the theming mechanism          |
 | `@font-face` / web fonts inside `<img>`-embedded SVG          | never load (CSP `default-src 'none'`)                                                        | system font stack only                 |
-| relative image paths on npmjs.com                             | rewritten to `raw.githubusercontent.com/<owner>/<repo>/HEAD/<path>` when `repository` is set | `./assets/…` is safe on both surfaces  |
+| relative `<img src>` on npmjs.com                             | rewritten to `raw.githubusercontent.com/<owner>/<repo>/HEAD/<path>` when `repository` is set | safe                                   |
+| relative `<source srcset>` on npmjs.com                       | **NOT rewritten** — left verbatim, resolves against `npmjs.com/package/…` and 403s           | use absolute raw URLs everywhere       |
+| npmjs.com page theme                                          | light-only; `color-scheme` is `normal`, so `prefers-color-scheme` follows the viewer's OS    | dark-OS visitors get the dark card     |
 
 `width` is an allowed attribute on `<img>`; `style` is not.
 
@@ -150,8 +152,16 @@ assets/
   support-browser-light.svg    support-browser-dark.svg
 ```
 
-Hand-written. Not added to `package.json` `files` — the tarball stays lean, and npm resolves
-the relative path against `raw.githubusercontent.com` regardless.
+Hand-written. Not added to `package.json` `files` — the tarball stays lean; the README points
+at `raw.githubusercontent.com` and never at a tarball path.
+
+**Reference them with absolute `raw.githubusercontent.com/.../HEAD/...` URLs, not `./assets/`.**
+Verified on the published `skia-canvas` package, whose README ships a relative `srcset`: npm
+rewrites `<img src>` to a raw URL but leaves `<source srcset>` verbatim, so it resolves to
+`https://www.npmjs.com/package/docs/assets/hero-dark@2x.png` → **403**. Every dark-mode npm
+visitor sees a broken image. `rolldown` and `oxc` both use absolute URLs for exactly this
+reason. Cost of absolute URLs: a PR that changes a card previews the _old_ image on GitHub
+until it merges, because `HEAD` means the default branch.
 
 ### README markup
 

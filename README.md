@@ -16,19 +16,23 @@ yarn add @napi-rs/lzma
 
 ## Support matrix
 
+<!-- Absolute raw URLs, not relative paths: npmjs.com rewrites <img src> to
+     raw.githubusercontent.com but does NOT rewrite <source srcset>, so a relative
+     srcset 404s on npm for every dark-mode visitor. -->
+
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./assets/support-node-dark.svg">
-  <img alt="Node.js — v22.20 to v26. engines is ^22.20 || ^24.12 || >=25; Node 23 and 24.0–24.11 are excluded. CI tests 22 and 24; 26 is supported but not in the CI matrix." src="./assets/support-node-light.svg">
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Brooooooklyn/lzma/HEAD/assets/support-node-dark.svg">
+  <img alt="Node.js — v22.20 to v26. engines is ^22.20 || ^24.12 || >=25; Node 23 and 24.0–24.11 are excluded. CI tests 22 and 24; 26 is supported but not in the CI matrix." src="https://raw.githubusercontent.com/Brooooooklyn/lzma/HEAD/assets/support-node-light.svg">
 </picture>
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./assets/support-platforms-dark.svg">
-  <img alt="Platforms — 16 prebuilt native targets. CI-tested: Linux x64 gnu and musl, Linux arm64 gnu and musl, Linux armv7 gnu, Windows x64, arm64 and x32, macOS x64 and arm64, FreeBSD x64. Non-blocking: Linux ppc64le and s390x. Built but untested: Linux riscv64, Android arm64 and armv7." src="./assets/support-platforms-light.svg">
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Brooooooklyn/lzma/HEAD/assets/support-platforms-dark.svg">
+  <img alt="Platforms — 16 prebuilt native targets. CI-tested: Linux x64 gnu and musl, Linux arm64 gnu and musl, Linux armv7 gnu, Windows x64, arm64 and x32, macOS x64 and arm64, FreeBSD x64. Non-blocking: Linux ppc64le and s390x. Built but untested: Linux riscv64, Android arm64 and armv7." src="https://raw.githubusercontent.com/Brooooooklyn/lzma/HEAD/assets/support-platforms-light.svg">
 </picture>
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./assets/support-browser-dark.svg">
-  <img alt="Browser — ships as wasm32-wasi, picked up by bundlers via the browser export condition. Requires cross-origin isolation (COOP + COEP) for SharedArrayBuffer." src="./assets/support-browser-light.svg">
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Brooooooklyn/lzma/HEAD/assets/support-browser-dark.svg">
+  <img alt="Browser — ships as wasm32-wasi, picked up by bundlers via the browser export condition. Requires cross-origin isolation (COOP + COEP) for SharedArrayBuffer." src="https://raw.githubusercontent.com/Brooooooklyn/lzma/HEAD/assets/support-browser-light.svg">
 </picture>
 
 <details>
