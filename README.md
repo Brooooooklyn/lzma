@@ -18,7 +18,7 @@ yarn add @napi-rs/lzma
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="./assets/support-node-dark.svg">
-  <img alt="Node.js — v22.20 to v26. Maintenance LTS 22, Active LTS 24, Current 26. Node 23 and 24.0–24.11 are excluded by engines. CI tests 22 and 24." src="./assets/support-node-light.svg">
+  <img alt="Node.js — v22.20 to v26. engines is ^22.20 || ^24.12 || >=25; Node 23 and 24.0–24.11 are excluded. CI tests 22 and 24; 26 is supported but not in the CI matrix." src="./assets/support-node-light.svg">
 </picture>
 
 <picture>
@@ -38,18 +38,24 @@ yarn add @napi-rs/lzma
 
 `engines.node` is `^22.20 || ^24.12 || >=25` — a deliberately non-contiguous range:
 
-| Range            | Supported | Note                                |
-| ---------------- | --------- | ----------------------------------- |
-| `< 22.20`        | no        |                                     |
-| `22.20` – `22.x` | yes       | Maintenance LTS; tested in CI       |
-| `23.x`           | no        | EOL 2025-06-01                      |
-| `24.0` – `24.11` | no        |                                     |
-| `24.12` – `24.x` | yes       | Active LTS; tested in CI            |
-| `25.x`           | yes       | permitted, but EOL since 2026-06-01 |
-| `26` and later   | yes       | Current                             |
+| Range            | Supported | Note                                          |
+| ---------------- | --------- | --------------------------------------------- |
+| `< 22.20`        | no        |                                               |
+| `22.20` – `22.x` | yes       | tested in CI                                  |
+| `23.x`           | no        | reached end-of-life 2025-06-01                |
+| `24.0` – `24.11` | no        |                                               |
+| `24.12` – `24.x` | yes       | tested in CI                                  |
+| `25.x`           | yes       | permitted, but reached end-of-life 2026-06-01 |
+| `26` and later   | yes       | not in the CI matrix                          |
 
-The floor comes from the JavaScript layer — `main.js` uses `require(esm)` to load
-`stream-polyfill.mjs` — not from the native binding, which only requires Node-API 5.
+Release-line status as of 2026-07-10: 22 is Maintenance LTS, 24 is Active LTS, 26 is Current.
+
+**Why these exact cutoffs?** They are a support policy, not a technical limit. The only hard
+floor in the shipped code is **Node 22.12**, where `require(esm)` became unflagged — `main.js`
+loads `stream-polyfill.mjs` with `require`. The native binding itself asks for nothing newer
+than Node-API 5. The `^22.20 || ^24.12 || >=25` range was inherited from the test toolchain
+(`ava` declares `^22.20 || ^24.12 || >=26`) and predates the `require(esm)` code by two months.
+Node 23 and 24.0–24.11 are dropped by policy; the code runs on them.
 
 ### Targets
 
