@@ -13,7 +13,7 @@ lzma-rust2 = { version = "0.16", default-features = false, features = [
   "xz",
   "optimization",
 ] }
-napi = "3"
+napi = "3.10.5"
 napi-derive = "3"
 
 # The Web Streams transforms (`src/stream_web.rs`) need tokio + tokio-stream via
@@ -25,7 +25,7 @@ napi-derive = "3"
 # `napi_add_finalizer` (Node-API 5), so `napi5` is required alongside it. All
 # supported Node engines (^22.20 || ^24.12 || >=25) ship Node-API 9+.
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
-napi = { version = "3", features = ["web_stream", "napi5"] }
+napi = { version = "3.10.5", features = ["web_stream", "napi5"] }
 
 [target.'cfg(all(not(target_os = "linux"), not(target_os = "freebsd"), not(target_arch = "arm"), not(target_arch = "x86"), not(target_family = "wasm")))'.dependencies]
 mimalloc-safe = { version = "0.1", features = ["skip_collect_on_exit"] }
