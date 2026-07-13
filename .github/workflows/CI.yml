@@ -342,7 +342,11 @@ jobs:
         exclude:
           - target: armv7-unknown-linux-gnueabihf
             node: '24'
-    runs-on: ubuntu-latest
+    # aarch64 runs on GitHub's native arm64 runner so its docker tests execute
+    # NATIVELY instead of under QEMU user-mode emulation — which flakily SIGSEGVs
+    # independently of our code. The other non-x86_64 targets (armv7/ppc64le/s390x)
+    # have no native runner, so they stay on x86_64 + QEMU (below).
+    runs-on: ${{ contains(matrix.target, 'aarch64') && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
     steps:
       - uses: actions/checkout@v7
       - name: Setup node
@@ -386,13 +390,22 @@ jobs:
       - name: List packages
         run: ls -R .
         shell: bash
+      # QEMU is only needed to emulate a foreign arch on the x86_64 host. aarch64
+      # runs on a native arm64 runner (`--platform linux/arm64` is native there),
+      # so skip the emulation setup for it.
       - name: Set up QEMU
+        if: ${{ !contains(matrix.target, 'aarch64') }}
         uses: docker/setup-qemu-action@v4
         with:
           platforms: all
-      - run: docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+      - if: ${{ !contains(matrix.target, 'aarch64') }}
+        run: docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
       - name: Test bindings
         uses: addnab/docker-run-action@v3
+        # powerpc64le/s390x still run under QEMU and flakily SIGSEGV independently of
+        # our code (long-standing emulator instability — sometimes crashing before a
+        # test even starts), so they are continue-on-error to keep that noise out of
+        # CI while preserving the endianness coverage they give when they pass.
         continue-on-error: ${{ contains(matrix.target, 'powerpc64') || contains(matrix.target, 's390x') }}
         with:
           image: ${{ steps.docker.outputs.IMAGE }}
