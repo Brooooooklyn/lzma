@@ -1,3 +1,17 @@
+# [1.5.0](https://github.com/Brooooooklyn/lzma/compare/v1.4.5...v1.5.0) (2026-07-13)
+
+
+### Bug Fixes
+
+* bump napi to 3.10.5 for the FunctionRef off-thread-drop fix ([#388](https://github.com/Brooooooklyn/lzma/issues/388)) ([976348e](https://github.com/Brooooooklyn/lzma/commit/976348ee48161e604b8cd51793e809f5f2119e6c)), closes [napi-rs/napi-rs#3394](https://github.com/napi-rs/napi-rs/issues/3394)
+* **deps:** update rust crate lzma-rust2 to 0.16 ([#381](https://github.com/Brooooooklyn/lzma/issues/381)) ([36cf3ee](https://github.com/Brooooooklyn/lzma/commit/36cf3ee0e00e43cbe77b6a314d47e799a4d8c651))
+* remove angle bracket from Node card alt text so GitHub renders the tag ([b42c61f](https://github.com/Brooooooklyn/lzma/commit/b42c61f5d0853f2734e576dfdc1ec1d3f8128f6f))
+
+
+### Features
+
+* add script-jail lifecycle-script audit gate ([#383](https://github.com/Brooooooklyn/lzma/issues/383)) ([8f13f5a](https://github.com/Brooooooklyn/lzma/commit/8f13f5a164ad306374c9acaf001b9357582b1210))
+* streaming compress/decompress (class + Web Streams API) for lzma/lzma2/xz ([#378](https://github.com/Brooooooklyn/lzma/issues/378)) ([d482c7d](https://github.com/Brooooooklyn/lzma/commit/d482c7d1553eb6b60806b5a8b98d24af41ef918d)), closes [#372](https://github.com/Brooooooklyn/lzma/issues/372)
 ## Unreleased
 
 
