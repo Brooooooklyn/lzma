@@ -94,6 +94,7 @@
     "format:source": "prettier --config ./package.json --write .",
     "format:toml": "taplo format",
     "prepublishOnly": "napi prepublish -t npm",
+    "preversion": "napi build --platform && git add .",
     "test": "ava",
     "version": "napi version && conventional-changelog -p angular -i CHANGELOG.md -s && git add CHANGELOG.md"
   },
