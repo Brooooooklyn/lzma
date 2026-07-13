@@ -16,23 +16,18 @@ yarn add @napi-rs/lzma
 
 ## Support matrix
 
-<!-- Absolute raw URLs, not relative paths: npmjs.com rewrites <img src> to
-     raw.githubusercontent.com but does NOT rewrite <source srcset>, so a relative
-     srcset 404s on npm for every dark-mode visitor. -->
+<!-- Rendered live by the napi.rs support-matrix badge service — not committed SVGs.
+     The <img> src is a PNG on purpose: npm proxies <img src> through camo, which
+     mangles remote SVG but passes raster untouched, so the light PNG renders on
+     npm / npmx / editors / crates. GitHub keeps <picture>, so dark-OS readers get
+     the dark PNG via <source>. Commas in the URL are %2C-encoded so <source srcset>
+     does not mis-split them. The full matrix is reproduced as text below for search
+     and screen readers. To change the card, edit the query (see /support-matrix on
+     napi.rs) — no image to re-commit. -->
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Brooooooklyn/lzma/HEAD/assets/support-node-dark.svg">
-  <img alt="Node.js support: v22.20 to v26. Node 23 and 24.0 to 24.11 are excluded. CI tests 22 and 24; 26 is supported but not in the CI matrix." src="https://raw.githubusercontent.com/Brooooooklyn/lzma/HEAD/assets/support-node-light.svg">
-</picture>
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Brooooooklyn/lzma/HEAD/assets/support-platforms-dark.svg">
-  <img alt="Platforms — 16 prebuilt native targets. CI-tested: Linux x64 gnu and musl, Linux arm64 gnu and musl, Linux armv7 gnu, Windows x64, arm64 and x32, macOS x64 and arm64, FreeBSD x64. Non-blocking: Linux ppc64le and s390x. Built but untested: Linux riscv64, Android arm64 and armv7." src="https://raw.githubusercontent.com/Brooooooklyn/lzma/HEAD/assets/support-platforms-light.svg">
-</picture>
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Brooooooklyn/lzma/HEAD/assets/support-browser-dark.svg">
-  <img alt="Browser — ships as wasm32-wasi, picked up by bundlers via the browser export condition. Requires cross-origin isolation (COOP + COEP) for SharedArrayBuffer." src="https://raw.githubusercontent.com/Brooooooklyn/lzma/HEAD/assets/support-browser-light.svg">
+  <source media="(prefers-color-scheme: dark)" srcset="https://napi.rs/support-matrix.png?engines=%5E22.20%20%7C%7C%20%5E24.12%20%7C%7C%20%3E%3D25&nodeTested=22%2C24&nodeOmit=25&tested=x86_64-pc-windows-msvc%2Caarch64-pc-windows-msvc%2Ci686-pc-windows-msvc%2Cx86_64-apple-darwin%2Caarch64-apple-darwin%2Cx86_64-unknown-linux-gnu%2Cx86_64-unknown-linux-musl%2Caarch64-unknown-linux-gnu%2Caarch64-unknown-linux-musl%2Carmv7-unknown-linux-gnueabihf%2Cx86_64-unknown-freebsd&nonblocking=powerpc64le-unknown-linux-gnu%2Cs390x-unknown-linux-gnu&untested=riscv64gc-unknown-linux-gnu%2Caarch64-linux-android%2Carm-linux-androideabi%2Cwasm32-wasi-preview1-threads&theme=dark">
+  <img alt="@napi-rs/lzma support matrix. Node.js v22.20 to v26 — engines allow ^22.20, ^24.12 and 25+; Node 23 and 24.0–24.11 are excluded; CI tests 22 and 24. 16 prebuilt native targets across Windows, macOS, Linux, Android and FreeBSD: 11 CI-tested, 2 non-blocking, 3 built but untested. Browser via wasm32-wasi, requiring COOP + COEP cross-origin isolation." src="https://napi.rs/support-matrix.png?engines=%5E22.20%20%7C%7C%20%5E24.12%20%7C%7C%20%3E%3D25&nodeTested=22%2C24&nodeOmit=25&tested=x86_64-pc-windows-msvc%2Caarch64-pc-windows-msvc%2Ci686-pc-windows-msvc%2Cx86_64-apple-darwin%2Caarch64-apple-darwin%2Cx86_64-unknown-linux-gnu%2Cx86_64-unknown-linux-musl%2Caarch64-unknown-linux-gnu%2Caarch64-unknown-linux-musl%2Carmv7-unknown-linux-gnueabihf%2Cx86_64-unknown-freebsd&nonblocking=powerpc64le-unknown-linux-gnu%2Cs390x-unknown-linux-gnu&untested=riscv64gc-unknown-linux-gnu%2Caarch64-linux-android%2Carm-linux-androideabi%2Cwasm32-wasi-preview1-threads">
 </picture>
 
 <details>
