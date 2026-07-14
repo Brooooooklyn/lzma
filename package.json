@@ -1,6 +1,6 @@
 {
   "name": "@napi-rs/lzma",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "lzma / lzma2 / xz compression for Node.js and the browser, backed by pure-Rust lzma-rust2 via https://napi.rs",
   "napi": {
     "binaryName": "lzma",

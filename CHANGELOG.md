@@ -1,3 +1,9 @@
+## [1.5.1](https://github.com/Brooooooklyn/lzma/compare/v1.5.0...v1.5.1) (2026-07-14)
+
+
+### Bug Fixes
+
+* **ci:** rm x64 host helper after cross builds so it can't clobber the real binary ([#391](https://github.com/Brooooooklyn/lzma/issues/391)) ([fce3555](https://github.com/Brooooooklyn/lzma/commit/fce355580163569080ca9526df48208633d17083)), closes [#276](https://github.com/Brooooooklyn/lzma/issues/276) [#276](https://github.com/Brooooooklyn/lzma/issues/276)
 # [1.5.0](https://github.com/Brooooooklyn/lzma/compare/v1.4.5...v1.5.0) (2026-07-13)
 
 
