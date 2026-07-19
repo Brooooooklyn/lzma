@@ -7,7 +7,7 @@ version = "0.0.0"
 crate-type = ["cdylib"]
 
 [dependencies]
-lzma-rust2 = { version = "0.16", default-features = false, features = [
+lzma-rust2 = { version = "0.17", default-features = false, features = [
   "std",
   "encoder",
   "xz",
