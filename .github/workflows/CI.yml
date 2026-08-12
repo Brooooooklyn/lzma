@@ -65,7 +65,7 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 24
           cache: 'yarn'
 
       - name: Install
@@ -166,7 +166,7 @@ jobs:
             build: |
               unset TARGET_CC
               yarn build --platform --target riscv64gc-unknown-linux-gnu
-    name: stable - ${{ matrix.settings.target }} - node@22
+    name: stable - ${{ matrix.settings.target }} - node@24
     runs-on: ${{ matrix.settings.host }}
     steps:
       - uses: actions/checkout@v7
@@ -198,7 +198,7 @@ jobs:
       - uses: mlugg/setup-zig@v2
         if: ${{ contains(matrix.settings.target, 'musl') }}
         with:
-          version: 0.15.2
+          version: 0.16.0
       - name: Install cargo-zigbuild
         uses: taiki-e/install-action@v2
         if: ${{ contains(matrix.settings.target, 'musl') }}
@@ -327,7 +327,7 @@ jobs:
         shell: bash
       - name: Test bindings
         run: yarn test
-  
+
   test-linux-binding:
     name: Test ${{ matrix.target }} - node@${{ matrix.node }}
     needs:
