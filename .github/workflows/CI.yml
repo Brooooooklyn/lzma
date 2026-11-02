@@ -38,7 +38,7 @@ jobs:
           node-version: 24
 
       - name: script-jail audit (enforce committed lock)
-        uses: Brooooooklyn/script-jail@v0.2.10
+        uses: Brooooooklyn/script-jail@v0.2.11
         with:
           mode: check
           backend: docker
