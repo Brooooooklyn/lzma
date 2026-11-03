@@ -127,7 +127,8 @@ jobs:
             target: armv7-unknown-linux-gnueabihf
             setup: wget https://www.unpkg.com/@napi-rs/lzma-linux-x64-gnu/lzma.linux-x64-gnu.node
             build: |
-              yarn build --target armv7-unknown-linux-gnueabihf --use-napi-cross
+              # Keep Clang's target aligned with the bundled GCC toolchain prefix.
+              TARGET_CFLAGS="--target=armv7-unknown-linux-gnueabihf" yarn build --target armv7-unknown-linux-gnueabihf --use-napi-cross
               rm lzma.linux-x64-gnu.node
           - host: ubuntu-latest
             target: aarch64-linux-android
