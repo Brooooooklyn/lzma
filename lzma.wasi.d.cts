@@ -181,3 +181,6 @@ export declare namespace xz {
   export function decompress(input: Uint8Array, signal?: AbortSignal | undefined | null): Promise<Buffer>
   export function decompressSync(input: Uint8Array): Buffer
 }
+
+/** The WASI flavor this loader instantiates. */
+export declare const __napiBindingTarget: 'wasm32-wasi'

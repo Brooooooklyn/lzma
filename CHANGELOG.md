@@ -1,3 +1,17 @@
+## [1.5.2](https://github.com/Brooooooklyn/lzma/compare/v1.5.1...v1.5.2) (2026-11-03)
+
+
+### Bug Fixes
+
+* **deps:** update rust crate lzma-rust2 to 0.17 ([#393](https://github.com/Brooooooklyn/lzma/issues/393)) ([0168eab](https://github.com/Brooooooklyn/lzma/commit/0168eabefb5a51dbe2df365f5ad4868feacfc802))
+* **deps:** update rust crate lzma-rust2 to 0.18 ([#395](https://github.com/Brooooooklyn/lzma/issues/395)) ([d30200a](https://github.com/Brooooooklyn/lzma/commit/d30200a1de172f3799e37ff8f640992cbc9028fc))
+* **deps:** update rust crate lzma-rust2 to 0.19 ([#402](https://github.com/Brooooooklyn/lzma/issues/402)) ([d290b5e](https://github.com/Brooooooklyn/lzma/commit/d290b5e36105b831496f2ab37a7fda37e5d5011a))
+* **deps:** update rust crate lzma-rust2 to 0.20 ([#404](https://github.com/Brooooooklyn/lzma/issues/404)) ([045b4f8](https://github.com/Brooooooklyn/lzma/commit/045b4f85245f6ca695cf8994702e9657f42df703))
+* **deps:** update rust crate lzma-rust2 to 0.21 ([#411](https://github.com/Brooooooklyn/lzma/issues/411)) ([c023b25](https://github.com/Brooooooklyn/lzma/commit/c023b25dd5cc4ed58f6e5c95fa5e5a9e5f2a1fb2))
+* **deps:** update rust crate lzma-rust2 to 0.22 ([#416](https://github.com/Brooooooklyn/lzma/issues/416)) ([20fb63b](https://github.com/Brooooooklyn/lzma/commit/20fb63b4a92dbff2dd843c242c6e48d13f96c1c9))
+* **deps:** update rust crate lzma-rust2 to 0.23 ([#418](https://github.com/Brooooooklyn/lzma/issues/418)) ([f108f72](https://github.com/Brooooooklyn/lzma/commit/f108f72f64cde893b4cf2a70890b559264b9c909))
+* **deps:** update rust crate lzma-rust2 to 0.24 ([#422](https://github.com/Brooooooklyn/lzma/issues/422)) ([e0898f4](https://github.com/Brooooooklyn/lzma/commit/e0898f43870f85661ee30755866c8992ab3619e7))
+* **deps:** update rust crate lzma-rust2 to 0.25 ([#425](https://github.com/Brooooooklyn/lzma/issues/425)) ([a79382f](https://github.com/Brooooooklyn/lzma/commit/a79382f569b07d291e8d12d39016ab58abbc1590))
 ## [1.5.1](https://github.com/Brooooooklyn/lzma/compare/v1.5.0...v1.5.1) (2026-07-14)
 
 
